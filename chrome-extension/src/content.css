@@ -1,36 +1,39 @@
-/* SpeedThreads Content Styles */
+/* SpeedThreads Content Styles - Match Reddit Action Buttons */
 .speedthreads-button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: transparent;
+  color: var(--color-text-secondary, #878a8c);
   border: none;
-  padding: 8px 16px;
+  padding: 8px 12px;
   border-radius: 20px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
-  margin: 0 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
+  margin: 0 4px;
+  transition: all 0.1s ease;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   white-space: nowrap;
+  font-family: inherit;
+  line-height: 1;
+  min-height: 32px;
 }
 
 .speedthreads-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+  background: var(--color-background-hover, #f6f7f8);
+  color: var(--color-text-primary, #1c1c1c);
 }
 
 .speedthreads-button:active {
-  transform: translateY(0);
+  background: var(--color-background-pressed, #e9ecef);
+  transform: scale(0.98);
 }
 
-/* Make it look more like Reddit action buttons */
+/* Icon styling to match Reddit buttons */
 .speedthreads-button::before {
   content: "✨";
-  font-size: 14px;
+  font-size: 16px;
+  line-height: 1;
 }
 
 .speedthreads-modal {

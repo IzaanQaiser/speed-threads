@@ -181,7 +181,7 @@ function createButton() {
   const button = document.createElement('button');
   button.id = CONFIG.BUTTON_ID;
   button.className = 'speedthreads-button';
-  button.innerHTML = '✨ Summarize with SpeedThreads';
+  button.innerHTML = 'speedthreads';
   button.addEventListener('click', handleSummarizeClick);
   return button;
 }
