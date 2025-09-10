@@ -14,7 +14,7 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
   line-height: 1.2 !important;
   color: #1c1c1c !important;
-  background: transparent !important;
+  background: #f6f7f8 !important; /* Use the hover/pressed background as default */
   cursor: pointer !important;
   margin: 0 !important;
   padding: 0 8px !important;
@@ -31,12 +31,12 @@
 }
 
 .speedthreads-button:hover {
-  background: #f6f7f8 !important;
+  background: #e9ecef !important; /* Darker on hover */
   color: #1c1c1c !important;
 }
 
 .speedthreads-button:active {
-  background: #e9ecef !important;
+  background: #d1d5db !important; /* Even darker when pressed */
   transform: none !important;
 }
 
