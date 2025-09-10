@@ -168,6 +168,7 @@ function injectButton() {
                          );
       
       if (shareButton && shareButton.parentNode) {
+        // Insert the button right after the share button with no extra spacing
         shareButton.parentNode.insertBefore(button, shareButton.nextSibling);
         console.log('SpeedThreads: Button inserted next to share button');
       } else {
