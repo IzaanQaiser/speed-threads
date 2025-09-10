@@ -156,3 +156,109 @@
   overflow-y: auto;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
+
+/* Tooltip styling */
+.speedthreads-tooltip {
+  position: absolute !important;
+  bottom: -35px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  background-color: #16181c !important; /* Dark grey background like X's tooltip */
+  color: white !important;
+  padding: 6px 8px !important;
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  white-space: nowrap !important;
+  z-index: 2147483647 !important; /* Maximum z-index value */
+  pointer-events: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  opacity: 1 !important; /* Start with opacity 1, no transition needed */
+  display: none !important; /* Use display to control visibility */
+}
+
+.speedthreads-tooltip[style*="block"] {
+  display: block !important;
+  opacity: 1 !important;
+}
+
+/* X-specific tooltip styling */
+.speedthreads-button[data-platform="x"] .speedthreads-tooltip {
+  position: fixed !important; /* Use fixed positioning to avoid clipping */
+  bottom: auto !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  transform: translateX(-50%) !important; /* Center horizontally */
+  z-index: 2147483647 !important; /* Maximum z-index value */
+  pointer-events: none !important;
+  background-color: #16181c !important; /* Dark background */
+  color: white !important;
+  padding: 6px 8px !important;
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  white-space: nowrap !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  isolation: isolate !important; /* Create new stacking context */
+  contain: layout style paint !important; /* Optimize rendering */
+  will-change: transform !important; /* Hint to browser for optimization */
+}
+
+/* Add a small arrow pointing up to the button */
+.speedthreads-tooltip::before {
+  content: '' !important;
+  position: absolute !important;
+  top: -4px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 0 !important;
+  height: 0 !important;
+  border-left: 4px solid transparent !important;
+  border-right: 4px solid transparent !important;
+  border-bottom: 4px solid #16181c !important;
+}
+
+/* X-specific arrow styling - default points up (for tooltip below button) */
+.speedthreads-button[data-platform="x"] .speedthreads-tooltip::before {
+  border-bottom: 4px solid #16181c !important;
+  border-top: none !important;
+}
+
+/* X-specific arrow styling when tooltip is above button */
+.speedthreads-button[data-platform="x"] .speedthreads-tooltip[data-position="above"]::before {
+  top: auto !important;
+  bottom: -4px !important;
+  border-top: 4px solid #16181c !important;
+  border-bottom: none !important;
+}
+
+/* X-specific arrow styling when tooltip is at top of viewport */
+.speedthreads-button[data-platform="x"] .speedthreads-tooltip[data-position="top"]::before {
+  display: none !important; /* Hide arrow when positioned at top */
+}
+
+/* X-specific arrow styling when tooltip is to the right of button */
+.speedthreads-button[data-platform="x"] .speedthreads-tooltip[data-position="right"]::before {
+  top: 50% !important;
+  left: -4px !important;
+  bottom: auto !important;
+  transform: translateY(-50%) !important;
+  border-right: 4px solid #16181c !important;
+  border-left: none !important;
+  border-top: 4px solid transparent !important;
+  border-bottom: 4px solid transparent !important;
+}
+
+/* X-specific arrow styling when tooltip is to the left of button */
+.speedthreads-button[data-platform="x"] .speedthreads-tooltip[data-position="left"]::before {
+  top: 50% !important;
+  right: -4px !important;
+  left: auto !important;
+  bottom: auto !important;
+  transform: translateY(-50%) !important;
+  border-left: 4px solid #16181c !important;
+  border-right: none !important;
+  border-top: 4px solid transparent !important;
+  border-bottom: 4px solid transparent !important;
+}

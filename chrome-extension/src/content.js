@@ -540,6 +540,110 @@ function createButton() {
   
   button.appendChild(span);
   
+  // Create tooltip element
+  const tooltip = document.createElement('div');
+  tooltip.className = 'speedthreads-tooltip';
+  tooltip.textContent = 'Summarise threads and replies with SpeedThreads';
+  tooltip.style.display = 'none';
+  button.appendChild(tooltip);
+  
+  console.log('SpeedThreads: Tooltip element created:', tooltip);
+  console.log('SpeedThreads: Tooltip className:', tooltip.className);
+  console.log('SpeedThreads: Tooltip textContent:', tooltip.textContent);
+  console.log('SpeedThreads: Tooltip initial display:', tooltip.style.display);
+  
+  // Add hover event listeners for tooltip
+  let hoverTimer = null;
+  
+  button.addEventListener('mouseenter', () => {
+    console.log('SpeedThreads: Mouse entered button, starting 1s timer');
+    hoverTimer = setTimeout(() => {
+      console.log('SpeedThreads: 1s timer completed, showing tooltip');
+      tooltip.style.display = 'block';
+      
+      // For X platform, calculate fixed position to avoid clipping
+      if (platform === 'x') {
+        const buttonRect = button.getBoundingClientRect();
+        const spacing = 8; // Space between button and tooltip
+        
+        // First show the tooltip to get its actual height
+        tooltip.style.position = 'fixed';
+        tooltip.style.left = `${buttonRect.left + (buttonRect.width / 2)}px`;
+        tooltip.style.transform = 'translateX(-50%)';
+        tooltip.style.backgroundColor = '#16181c'; // Proper dark background
+        tooltip.style.border = 'none'; // Remove debug border
+        tooltip.style.top = '0px'; // Temporary position to measure
+        tooltip.style.zIndex = '2147483647'; // Ensure maximum z-index
+        
+        // Get the actual tooltip height after it's rendered
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const tooltipHeight = tooltipRect.height;
+        
+        // Position tooltip to the RIGHT of the button to avoid reply div
+        const spaceRight = window.innerWidth - buttonRect.right;
+        const spaceLeft = buttonRect.left;
+        const tooltipWidth = 300; // Approximate tooltip width
+        
+        if (spaceRight > tooltipWidth + spacing) {
+          // Position to the right of the button
+          tooltip.style.top = `${buttonRect.top + (buttonRect.height / 2)}px`;
+          tooltip.style.left = `${buttonRect.right + spacing}px`;
+          tooltip.style.transform = 'translateY(-50%)'; // Center vertically
+          tooltip.setAttribute('data-position', 'right');
+          console.log('SpeedThreads: X tooltip positioned to RIGHT of button');
+        } else if (spaceLeft > tooltipWidth + spacing) {
+          // Position to the left of the button
+          tooltip.style.top = `${buttonRect.top + (buttonRect.height / 2)}px`;
+          tooltip.style.left = `${buttonRect.left - tooltipWidth - spacing}px`;
+          tooltip.style.transform = 'translateY(-50%)'; // Center vertically
+          tooltip.setAttribute('data-position', 'left');
+          console.log('SpeedThreads: X tooltip positioned to LEFT of button');
+        } else {
+          // Fallback: position above the button
+          tooltip.style.top = `${buttonRect.top - tooltipHeight - spacing}px`;
+          tooltip.style.left = `${buttonRect.left + (buttonRect.width / 2)}px`;
+          tooltip.style.transform = 'translateX(-50%)'; // Center horizontally
+          tooltip.setAttribute('data-position', 'above');
+          console.log('SpeedThreads: X tooltip positioned ABOVE button (fallback)');
+        }
+        
+        // Force the tooltip to be on top of everything
+        tooltip.style.position = 'fixed';
+        tooltip.style.zIndex = '2147483647';
+        tooltip.style.isolation = 'isolate';
+        tooltip.style.contain = 'layout style paint';
+        
+        console.log('SpeedThreads: X tooltip positioned at:', {
+          top: tooltip.style.top,
+          left: tooltip.style.left,
+          buttonRect: buttonRect,
+          tooltipHeight: tooltipHeight,
+          spaceRight: spaceRight,
+          spaceLeft: spaceLeft,
+          finalTooltipRect: tooltip.getBoundingClientRect()
+        });
+      }
+      
+      console.log('SpeedThreads: Tooltip display set to:', tooltip.style.display);
+      console.log('SpeedThreads: Tooltip computed style display:', window.getComputedStyle(tooltip).display);
+      console.log('SpeedThreads: Tooltip computed style opacity:', window.getComputedStyle(tooltip).opacity);
+      console.log('SpeedThreads: Tooltip computed style visibility:', window.getComputedStyle(tooltip).visibility);
+      console.log('SpeedThreads: Tooltip position:', tooltip.getBoundingClientRect());
+      console.log('SpeedThreads: Button position:', button.getBoundingClientRect());
+    }, 500); // Show tooltip after 500ms
+  });
+  
+  button.addEventListener('mouseleave', () => {
+    console.log('SpeedThreads: Mouse left button, clearing timer and hiding tooltip');
+    if (hoverTimer) {
+      clearTimeout(hoverTimer);
+      hoverTimer = null;
+      console.log('SpeedThreads: Timer cleared');
+    }
+    tooltip.style.display = 'none';
+    console.log('SpeedThreads: Tooltip hidden');
+  });
+  
   // Add click event listener with capture phase to ensure we handle it first
   button.addEventListener('click', handleSummarizeClick, true);
   
