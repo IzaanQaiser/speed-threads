@@ -32,7 +32,7 @@
   pointer-events: auto !important;
   /* Force the background to show */
   background-color: #ffffff !important;
-  background-image: none !important;
+  background-image: none !important; /* hello */
 }
 
 .speedthreads-button:hover {
