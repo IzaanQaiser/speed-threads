@@ -1,22 +1,24 @@
-/* SpeedThreads Content Styles - Match Reddit Action Buttons */
+/* SpeedThreads Content Styles - Liquid Glass Effect */
 .speedthreads-button {
-  background: transparent !important;
-  color: #878a8c !important;
-  border: none !important;
-  padding: 8px 12px !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #1a1a1a !important;
+  padding: 8px 16px !important;
   border-radius: 20px !important;
   font-size: 12px !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important;
   cursor: pointer !important;
-  margin: 0 !important;
-  transition: all 0.1s ease !important;
+  margin: 0 4px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 4px !important;
+  gap: 6px !important;
   white-space: nowrap !important;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
   line-height: 1 !important;
-  height: 32px !important;
+  height: 36px !important;
   position: relative !important;
   z-index: 1000 !important;
   pointer-events: auto !important;
@@ -25,21 +27,55 @@
   outline: none !important;
   min-width: auto !important;
   max-width: none !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+  overflow: hidden !important;
+}
+
+.speedthreads-button::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -100% !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent) !important;
+  transition: left 0.5s !important;
 }
 
 .speedthreads-button:hover {
-  background: #f6f7f8 !important;
-  color: #1c1c1c !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+.speedthreads-button:hover::before {
+  left: 100% !important;
 }
 
 .speedthreads-button:active {
-  background: #e9ecef !important;
-  transform: none !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
 }
 
-/* Remove the sparkle icon and make it look like other Reddit buttons */
-.speedthreads-button::before {
-  display: none !important;
+/* Add a subtle glow effect */
+.speedthreads-button::after {
+  content: '' !important;
+  position: absolute !important;
+  top: -2px !important;
+  left: -2px !important;
+  right: -2px !important;
+  bottom: -2px !important;
+  background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05)) !important;
+  border-radius: 22px !important;
+  z-index: -1 !important;
+  opacity: 0 !important;
+  transition: opacity 0.3s ease !important;
+}
+
+.speedthreads-button:hover::after {
+  opacity: 1 !important;
 }
 
 .speedthreads-modal {
