@@ -3,23 +3,34 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  margin: 16px 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin: 0 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
 }
 
 .speedthreads-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
 }
 
 .speedthreads-button:active {
   transform: translateY(0);
+}
+
+/* Make it look more like Reddit action buttons */
+.speedthreads-button::before {
+  content: "✨";
+  font-size: 14px;
 }
 
 .speedthreads-modal {

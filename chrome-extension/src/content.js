@@ -33,13 +33,30 @@ function initialize() {
   const platform = getPlatform();
   console.log(`SpeedThreads: ${platform} page detected`);
   
+  // Try multiple times with different delays for dynamic content
+  const tryInject = (attempt = 1) => {
+    console.log(`SpeedThreads: Injection attempt ${attempt}`);
+    
+    if (document.getElementById(CONFIG.BUTTON_ID)) {
+      console.log('SpeedThreads: Button already exists');
+      return;
+    }
+    
+    injectButton();
+    
+    // If button still not found, try again
+    if (!document.getElementById(CONFIG.BUTTON_ID) && attempt < 5) {
+      setTimeout(() => tryInject(attempt + 1), 2000 * attempt);
+    }
+  };
+  
   // Wait for page to be fully loaded
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(injectButton, 1000); // Wait a bit for dynamic content
+      setTimeout(() => tryInject(1), 1000);
     });
   } else {
-    setTimeout(injectButton, 1000);
+    setTimeout(() => tryInject(1), 1000);
   }
 }
 
@@ -54,10 +71,27 @@ function injectButton() {
   let targetElement;
 
   if (platform === 'reddit') {
-    // Find Reddit post container
+    // Try multiple Reddit selectors for different layouts
     targetElement = document.querySelector('[data-testid="post-content"]') || 
                    document.querySelector('.Post') ||
-                   document.querySelector('[data-testid="post-container"]');
+                   document.querySelector('[data-testid="post-container"]') ||
+                   document.querySelector('article[data-testid="post"]') ||
+                   document.querySelector('[data-click-id="body"]') ||
+                   document.querySelector('.PostContent') ||
+                   document.querySelector('div[data-testid="post-content"]');
+    
+    // If we found a post container, try to find the action bar with share button
+    if (targetElement) {
+      const actionBar = targetElement.querySelector('[data-testid="post-actions"]') ||
+                       targetElement.querySelector('.PostActions') ||
+                       targetElement.querySelector('[data-click-id="actions"]') ||
+                       targetElement.querySelector('div[role="group"]');
+      
+      if (actionBar) {
+        targetElement = actionBar;
+        console.log('SpeedThreads: Found Reddit action bar');
+      }
+    }
   } else if (platform === 'x') {
     // Find X post container
     targetElement = document.querySelector('[data-testid="tweet"]') ||
@@ -66,10 +100,29 @@ function injectButton() {
 
   if (targetElement) {
     const button = createButton();
-    targetElement.appendChild(button);
+    
+    // Try to insert next to share button on Reddit
+    if (platform === 'reddit') {
+      const shareButton = targetElement.querySelector('[data-testid="share-button"]') ||
+                         targetElement.querySelector('button[aria-label*="Share"]') ||
+                         targetElement.querySelector('button[aria-label*="share"]');
+      
+      if (shareButton && shareButton.parentNode) {
+        shareButton.parentNode.insertBefore(button, shareButton.nextSibling);
+        console.log('SpeedThreads: Button inserted next to share button');
+      } else {
+        targetElement.appendChild(button);
+        console.log('SpeedThreads: Button appended to target element');
+      }
+    } else {
+      targetElement.appendChild(button);
+      console.log('SpeedThreads: Button appended to target element');
+    }
+    
     console.log('SpeedThreads: Button injected successfully');
   } else {
     console.log('SpeedThreads: Could not find target element for button injection');
+    console.log('SpeedThreads: Available elements:', document.querySelectorAll('*[data-testid]'));
   }
 }
 
