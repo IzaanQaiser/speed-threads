@@ -191,11 +191,17 @@ function injectButton() {
 function createButton() {
   const button = document.createElement('button');
   button.id = CONFIG.BUTTON_ID;
-  button.className = 'speedthreads-button';
-  button.innerHTML = 'speedthreads';
-  button.type = 'button'; // Prevent form submission
-  button.setAttribute('data-speedthreads', 'true'); // Mark as our button
+  button.className = 'button border-md overflow-visible flex flex-row justify-center items-center h-xl font-semibold relative text-12 button-secondary inline-flex items-center px-sm speedthreads-button';
   button.setAttribute('aria-label', 'Summarize with SpeedThreads');
+  button.type = 'button';
+  button.setAttribute('data-speedthreads', 'true');
+  
+  // Create the inner structure like Reddit's buttons
+  const span = document.createElement('span');
+  span.className = 'flex items-center';
+  span.textContent = 'speedthreads';
+  
+  button.appendChild(span);
   
   // Add click event listener with capture phase to ensure we handle it first
   button.addEventListener('click', handleSummarizeClick, true);
