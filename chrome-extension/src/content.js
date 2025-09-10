@@ -23,50 +23,160 @@ function getPlatform() {
   return null;
 }
 
+// Find the views element in X posts
+function findViewsElement(tweetElement) {
+  // Look for spans that contain "Views" text
+  const spans = tweetElement.querySelectorAll('span');
+  for (const span of spans) {
+    if (span.textContent && span.textContent.includes('Views')) {
+      return span;
+    }
+  }
+  
+  // Fallback: look for elements with common X views patterns
+  const viewsSelectors = [
+    '[data-testid="tweet-text"] + div span', // Common pattern after tweet text
+    'div[dir="ltr"] span', // Direction-based selector
+    'time + span' // After timestamp
+  ];
+  
+  for (const selector of viewsSelectors) {
+    const elements = tweetElement.querySelectorAll(selector);
+    for (const element of elements) {
+      if (element.textContent && element.textContent.includes('Views')) {
+        return element;
+      }
+    }
+  }
+  
+  return null;
+}
+
+// Track current URL for SPA navigation detection
+let currentUrl = window.location.href;
+
+// Set up URL change detection for SPA navigation
+function setupUrlChangeDetection() {
+  // Check for URL changes every 500ms
+  setInterval(() => {
+    const newUrl = window.location.href;
+    if (newUrl !== currentUrl) {
+      console.log('SpeedThreads: URL changed from', currentUrl, 'to', newUrl);
+      currentUrl = newUrl;
+      
+      // Check if we're now on a supported page
+      if (isSupportedPage()) {
+        console.log('SpeedThreads: Navigated to supported page, re-initializing...');
+        // Remove existing button if it exists
+        const existingButton = document.getElementById(CONFIG.BUTTON_ID);
+        if (existingButton) {
+          existingButton.remove();
+        }
+        // Re-initialize injection
+        setTimeout(() => {
+          initializeInjection();
+        }, 1000); // Give the page time to load
+      }
+    }
+  }, 500);
+  
+  // Also listen for popstate events (back/forward navigation)
+  window.addEventListener('popstate', () => {
+    setTimeout(() => {
+      const newUrl = window.location.href;
+      if (newUrl !== currentUrl && isSupportedPage()) {
+        console.log('SpeedThreads: Popstate navigation to supported page');
+        currentUrl = newUrl;
+        const existingButton = document.getElementById(CONFIG.BUTTON_ID);
+        if (existingButton) {
+          existingButton.remove();
+        }
+        setTimeout(() => {
+          initializeInjection();
+        }, 1000);
+      }
+    }, 100);
+  });
+}
+
 // Initialize when DOM is ready
 function initialize() {
-  if (!isSupportedPage()) {
-    console.log('SpeedThreads: Unsupported page');
-    return;
-  }
-
   const platform = getPlatform();
   console.log(`SpeedThreads: ${platform} page detected`);
   
+  // Keep service worker alive
+  sendKeepAlive();
+  
+  // Set up URL change detection for SPA navigation
+  setupUrlChangeDetection();
+  
+  // If we're on a supported page, inject immediately
+  if (isSupportedPage()) {
+    console.log('SpeedThreads: On supported page, initializing injection');
+    initializeInjection();
+  } else {
+    console.log('SpeedThreads: On feed page, waiting for navigation to supported page');
+  }
+}
+
+// Initialize injection logic (separated for re-use)
+function initializeInjection() {
+  console.log('SpeedThreads: initializeInjection() called');
+  
   // Use MutationObserver for robust injection
   const observer = new MutationObserver((mutations, obs) => {
-    // Check if button already exists
-    if (document.getElementById(CONFIG.BUTTON_ID)) {
-      return;
-    }
-    
-    // Check if any new elements were added that might be Reddit action buttons
+    // Check if any new elements were added that might be Reddit action buttons or X posts
     let shouldTryInjection = false;
+    const platform = getPlatform();
     
     mutations.forEach(mutation => {
       if (mutation.type === 'childList') {
         mutation.addedNodes.forEach(node => {
           if (node.nodeType === Node.ELEMENT_NODE) {
-            // Check if this looks like a Reddit action button area
-            if (node.matches && (
-              node.matches('button[aria-label*="Share"]') ||
-              node.matches('button[aria-label*="share"]') ||
-              node.matches('[data-testid="post-actions"]') ||
-              node.matches('.PostActions') ||
-              node.matches('div[role="group"]') ||
-              node.textContent?.toLowerCase().includes('share')
-            )) {
-              shouldTryInjection = true;
-            }
-            
-            // Also check children
-            if (node.querySelector && (
-              node.querySelector('button[aria-label*="Share"]') ||
-              node.querySelector('button[aria-label*="share"]') ||
-              node.querySelector('[data-testid="post-actions"]') ||
-              node.querySelector('.PostActions')
-            )) {
-              shouldTryInjection = true;
+            if (platform === 'reddit') {
+              // Check if this looks like a Reddit action button area or post
+              if (node.matches && (
+                node.matches('button[aria-label*="Share"]') ||
+                node.matches('button[aria-label*="share"]') ||
+                node.matches('[data-testid="post-actions"]') ||
+                node.matches('.PostActions') ||
+                node.matches('div[role="group"]') ||
+                node.matches('shreddit-post') ||
+                node.matches('article') ||
+                node.textContent?.toLowerCase().includes('share')
+              )) {
+                shouldTryInjection = true;
+              }
+              
+              // Also check children
+              if (node.querySelector && (
+                node.querySelector('button[aria-label*="Share"]') ||
+                node.querySelector('button[aria-label*="share"]') ||
+                node.querySelector('[data-testid="post-actions"]') ||
+                node.querySelector('.PostActions') ||
+                node.querySelector('shreddit-post') ||
+                node.querySelector('article')
+              )) {
+                shouldTryInjection = true;
+              }
+            } else if (platform === 'x') {
+              // Check if this looks like an X post or contains views element
+              if (node.matches && (
+                node.matches('article[role="article"]') ||
+                node.matches('[data-testid="tweet"]') ||
+                node.textContent?.includes('Views')
+              )) {
+                shouldTryInjection = true;
+              }
+              
+              // Also check children for X posts
+              if (node.querySelector && (
+                node.querySelector('article[role="article"]') ||
+                node.querySelector('[data-testid="tweet"]') ||
+                node.querySelector('span')?.textContent?.includes('Views')
+              )) {
+                shouldTryInjection = true;
+              }
             }
           }
         });
@@ -75,9 +185,10 @@ function initialize() {
     
     // Try to inject button if we detected relevant changes
     if (shouldTryInjection || mutations.length > 0) {
+      // Always try injection on mutations - let injectButton() handle duplicates
       if (injectButton()) {
         console.log('SpeedThreads: Button injected via MutationObserver');
-        obs.disconnect(); // Stop observing once successful
+        // Don't disconnect observer - keep it running for dynamic content
       }
     }
   });
@@ -95,26 +206,100 @@ function initialize() {
     console.log('SpeedThreads: Immediate injection failed, waiting for DOM changes...');
   }
 
-  // Fallback: Try again after a delay
-  setTimeout(() => {
-    if (!document.getElementById(CONFIG.BUTTON_ID)) {
-      console.log('SpeedThreads: Fallback injection attempt');
+  // Multiple fallback attempts for dynamic loading
+  const fallbackAttempts = [1000, 3000, 5000, 10000];
+  fallbackAttempts.forEach(delay => {
+    setTimeout(() => {
+      if (!document.getElementById(CONFIG.BUTTON_ID)) {
+        console.log(`SpeedThreads: Fallback injection attempt after ${delay}ms`);
+        injectButton();
+      }
+    }, delay);
+  });
+
+  // Periodic re-injection for dynamic content (every 5 seconds for SPA navigation)
+  setInterval(() => {
+    const button = document.getElementById(CONFIG.BUTTON_ID);
+    if (!button || !button.isConnected || button.offsetParent === null) {
+      console.log('SpeedThreads: Periodic re-injection attempt');
       injectButton();
     }
-  }, 3000);
+  }, 5000);
+  
+  // Also check on page visibility change (for SPA navigation)
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      setTimeout(() => {
+        const button = document.getElementById(CONFIG.BUTTON_ID);
+        if (!button || !button.isConnected || button.offsetParent === null) {
+          console.log('SpeedThreads: Re-injection on visibility change');
+          injectButton();
+        }
+      }, 1000);
+    }
+  });
+  
+  // Send periodic keep-alive messages to prevent service worker from going inactive
+  setInterval(() => {
+    sendKeepAlive();
+  }, 30000); // Every 30 seconds
+  
+  // Additional SPA navigation detection - check for major content changes
+  let lastContentHash = '';
+  setInterval(() => {
+    const platform = getPlatform();
+    let contentHash = '';
+    
+    if (platform === 'reddit') {
+      const postElement = document.querySelector('shreddit-post') || document.querySelector('article');
+      if (postElement) {
+        contentHash = postElement.innerHTML.length + postElement.textContent.length;
+      }
+    } else if (platform === 'x') {
+      const tweetElement = document.querySelector('[data-testid="tweet"]') || document.querySelector('article[role="article"]');
+      if (tweetElement) {
+        contentHash = tweetElement.innerHTML.length + tweetElement.textContent.length;
+      }
+    }
+    
+    if (contentHash && contentHash !== lastContentHash) {
+      console.log('SpeedThreads: Content changed, attempting injection');
+      lastContentHash = contentHash;
+      setTimeout(() => {
+        injectButton();
+      }, 500);
+    }
+  }, 2000); // Check every 2 seconds
+}
 
-  // Clean up observer after 30 seconds
-  setTimeout(() => {
-    observer.disconnect();
-    console.log('SpeedThreads: Observer disconnected after timeout');
-  }, 30000);
+// Send keep-alive message to background script
+function sendKeepAlive() {
+  try {
+    chrome.runtime.sendMessage({ type: 'KEEP_ALIVE' }, (response) => {
+      if (chrome.runtime.lastError) {
+        console.log('SpeedThreads: Keep-alive failed:', chrome.runtime.lastError);
+      } else {
+        console.log('SpeedThreads: Keep-alive sent');
+      }
+    });
+  } catch (error) {
+    console.log('SpeedThreads: Keep-alive error:', error);
+  }
 }
 
 // Inject the summarize button
 function injectButton() {
   // Check if button already exists
-  if (document.getElementById(CONFIG.BUTTON_ID)) {
-    return true; // Button already exists
+  const existingButton = document.getElementById(CONFIG.BUTTON_ID);
+  if (existingButton) {
+    // Check if button is still visible and properly attached
+    if (existingButton.isConnected && existingButton.offsetParent !== null) {
+      return true; // Button already exists and is visible
+    } else {
+      // Button exists but is not visible, remove it and re-inject
+      console.log('SpeedThreads: Removing orphaned button');
+      existingButton.remove();
+    }
   }
 
   const platform = getPlatform();
@@ -154,12 +339,20 @@ function injectButton() {
     // Find X post container
     targetElement = document.querySelector('[data-testid="tweet"]') ||
                    document.querySelector('article[role="article"]');
+    
+    if (targetElement) {
+      // Look for the views element specifically
+      const viewsElement = findViewsElement(targetElement);
+      if (viewsElement) {
+        targetElement = viewsElement.parentNode;
+      }
+    }
   }
 
   if (targetElement) {
     const button = createButton();
     
-    // Try to insert next to share button on Reddit
+    // Try to insert next to share button on Reddit or views element on X
     if (platform === 'reddit') {
       const shareButton = targetElement.querySelector('button[aria-label*="Share"]') ||
                          targetElement.querySelector('button[aria-label*="share"]') ||
@@ -171,6 +364,19 @@ function injectButton() {
         // Insert the button right after the share button with no extra spacing
         shareButton.parentNode.insertBefore(button, shareButton.nextSibling);
         console.log('SpeedThreads: Button inserted next to share button');
+      } else {
+        targetElement.appendChild(button);
+        console.log('SpeedThreads: Button appended to target element');
+      }
+    } else if (platform === 'x') {
+      // For X, try to insert next to the views element
+      const viewsElement = findViewsElement(document.querySelector('[data-testid="tweet"]') || 
+                                           document.querySelector('article[role="article"]'));
+      
+      if (viewsElement && viewsElement.parentNode) {
+        // Insert the button right after the views element
+        viewsElement.parentNode.insertBefore(button, viewsElement.nextSibling);
+        console.log('SpeedThreads: Button inserted next to views element');
       } else {
         targetElement.appendChild(button);
         console.log('SpeedThreads: Button appended to target element');
@@ -190,14 +396,16 @@ function injectButton() {
 
 // Create the summarize button
 function createButton() {
+  const platform = getPlatform();
   const button = document.createElement('button');
   button.id = CONFIG.BUTTON_ID;
   button.className = 'button border-md overflow-visible flex flex-row justify-center items-center h-xl font-semibold relative text-12 button-secondary inline-flex items-center px-sm speedthreads-button';
   button.setAttribute('aria-label', 'Summarize with SpeedThreads');
   button.type = 'button';
   button.setAttribute('data-speedthreads', 'true');
+  button.setAttribute('data-platform', platform);
   
-  // Create the inner structure like Reddit's buttons
+  // Create the inner structure
   const span = document.createElement('span');
   span.className = 'flex items-center';
   span.textContent = 'speedthreads';

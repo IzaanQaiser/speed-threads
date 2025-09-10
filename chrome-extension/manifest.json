@@ -17,11 +17,12 @@
   "content_scripts": [
     {
       "matches": [
-        "https://*.reddit.com/r/*/comments/*",
-        "https://*.x.com/*/status/*"
+        "https://*.reddit.com/*",
+        "https://*.x.com/*"
       ],
       "js": ["src/content.js"],
-      "css": ["src/content.css"]
+      "css": ["src/content.css"],
+      "run_at": "document_start"
     }
   ],
   
