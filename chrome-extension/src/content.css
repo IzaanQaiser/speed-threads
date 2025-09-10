@@ -73,9 +73,9 @@
   margin-right: 0 !important;
   margin-top: 0 !important;
   margin-bottom: 0 !important;
-  background: #1d9bf0 !important; /* X blue color */
-  background-color: #1d9bf0 !important;
-  color: white !important;
+  background: #ffffff !important; /* X blue color */
+  background-color: #ffffff !important;
+  color: black !important;
   border-radius: 16px !important;
   padding: 4px 12px !important;
   font-size: 13px !important;
@@ -86,13 +86,13 @@
 }
 
 .speedthreads-button[data-platform="x"]:hover {
-  background: #1a8cd8 !important; /* Darker blue on hover */
-  background-color: #1a8cd8 !important;
+  background: #e9ecef !important; /* Darker blue on hover */
+  background-color: #e9ecef !important;
 }
 
 .speedthreads-button[data-platform="x"]:active {
-  background: #0f7ae5 !important; /* Even darker blue on active */
-  background-color: #0f7ae5 !important;
+  background: #ced5da !important; /* Even darker blue on active */
+  background-color: #ced5da !important;
 }
 
 .speedthreads-modal {
