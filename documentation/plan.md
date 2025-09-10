@@ -1,181 +1,133 @@
 # 🚀 SpeedThreads 48-Hour Hackathon Plan
+*Each item = 1 commit*
 
-## **Phase 1: Project Setup & Chrome Extension (Hours 1-8)**
-**Time: 8 hours**
+## **Phase 1: Basic Chrome Extension (Hours 1-8)**
 
-### Hour 1-2: Project Structure
-- [ ] Create project folders: `chrome-extension/`, `backend/`, `shared/`
-- [ ] Set up Chrome extension manifest v3
-- [ ] Initialize basic content script structure
-- [ ] Set up TypeScript/React build pipeline
+### Hour 1-2: Project Setup
+1. Create basic project structure with folders
+2. Initialize Chrome extension manifest.json
+3. Add basic content script file
+4. Test extension loads in Chrome
 
-### Hour 3-4: Chrome Extension Core
-- [ ] Create manifest.json with proper permissions
-- [ ] Build content script that detects Reddit/X URLs
-- [ ] Add basic button injection logic
-- [ ] Test extension loading in Chrome
+### Hour 3-4: Button Injection
+5. Detect Reddit thread URLs
+6. Inject "Summarize" button into Reddit pages
+7. Add click handler to button
+8. Test button appears and responds
 
-### Hour 5-6: DOM Scraping (Reddit)
-- [ ] Research Reddit DOM structure
-- [ ] Build scraper for main post content
-- [ ] Extract visible replies and metadata
-- [ ] Test on various Reddit thread types
+### Hour 5-6: Reddit Scraping
+9. Scrape Reddit post title and text
+10. Scrape first 5 visible comments
+11. Log scraped data to console
+12. Test on different Reddit threads
 
-### Hour 7-8: DOM Scraping (X/Twitter)
-- [ ] Research X DOM structure
-- [ ] Build scraper for tweets and replies
-- [ ] Handle X's dynamic loading
-- [ ] Test on various X thread types
-
----
-
-## **Phase 2: Backend & AI Integration (Hours 9-24)**
-**Time: 16 hours**
-
-### Hour 9-12: FastAPI Backend
-- [ ] Set up FastAPI project with Python
-- [ ] Create `/summarize` endpoint
-- [ ] Define request/response schemas
-- [ ] Add CORS and basic error handling
-- [ ] Test with mock data
-
-### Hour 13-16: GPT-OSS Setup
-- [ ] Install and configure Ollama
-- [ ] Download GPT-OSS model (20b or smaller for speed)
-- [ ] Test model locally with simple prompts
-- [ ] Create basic prompt templates
-
-### Hour 17-20: AI Prompting Logic
-- [ ] Build post type classification prompt
-- [ ] Create TL;DR generation prompt
-- [ ] Design bullet-point summary prompt
-- [ ] Build highlight extraction prompts
-- [ ] Test prompt chain with sample data
-
-### Hour 21-24: Backend Integration
-- [ ] Connect FastAPI to Ollama
-- [ ] Implement full prompt chain
-- [ ] Add JSON response formatting
-- [ ] Test end-to-end backend flow
-- [ ] Add error handling and fallbacks
+### Hour 7-8: X/Twitter Support
+13. Detect X thread URLs
+14. Inject button into X pages
+15. Scrape X post and replies
+16. Test on X threads
 
 ---
 
-## **Phase 3: Frontend UI & Integration (Hours 25-40)**
-**Time: 16 hours**
+## **Phase 2: Backend API (Hours 9-16)**
 
-### Hour 25-28: React Modal UI
-- [ ] Set up React component for summary modal
-- [ ] Design modal layout with sections
-- [ ] Add loading states and animations
-- [ ] Implement copy-to-clipboard functionality
+### Hour 9-10: FastAPI Setup
+17. Create FastAPI project
+18. Add /summarize endpoint
+19. Return mock JSON response
+20. Test endpoint with Postman
 
-### Hour 29-32: Chrome Extension Integration
-- [ ] Connect content script to backend API
-- [ ] Handle API calls and responses
-- [ ] Add error handling for network issues
-- [ ] Test full flow on Reddit threads
+### Hour 11-12: Request/Response
+21. Define request schema for thread data
+22. Define response schema for summary
+23. Update endpoint to use schemas
+24. Test with real thread data
 
-### Hour 33-36: UI Polish & Features
-- [ ] Style modal with modern CSS
-- [ ] Add collapse/expand functionality
-- [ ] Implement responsive design
-- [ ] Add keyboard shortcuts (ESC to close)
+### Hour 13-14: Ollama Setup
+25. Install Ollama
+26. Download small GPT model (7b or 13b)
+27. Test model with simple prompt
+28. Connect Ollama to FastAPI
 
-### Hour 37-40: Cross-Platform Testing
-- [ ] Test on various Reddit subreddits
-- [ ] Test on X threads
-- [ ] Handle edge cases (deleted posts, etc.)
-- [ ] Optimize performance and loading times
-
----
-
-## **Phase 4: Final Polish & Demo Prep (Hours 41-48)**
-**Time: 8 hours**
-
-### Hour 41-44: Bug Fixes & Optimization
-- [ ] Fix any remaining bugs
-- [ ] Optimize AI response times
-- [ ] Add better error messages
-- [ ] Test on different thread types
-
-### Hour 45-48: Demo Preparation
-- [ ] Create demo script with example threads
-- [ ] Record demo video (if needed)
-- [ ] Prepare presentation slides
-- [ ] Test everything one final time
+### Hour 15-16: Basic AI Integration
+29. Create simple summarization prompt
+30. Generate TL;DR from thread data
+31. Return structured JSON response
+32. Test end-to-end flow
 
 ---
 
-## **🎯 Critical Success Factors**
+## **Phase 3: Frontend UI (Hours 17-24)**
 
-### **Must-Have for Demo:**
-1. **Working Chrome extension** that injects button
-2. **Functional DOM scraping** for both platforms
-3. **Working AI summarization** (even if basic)
-4. **Clean UI modal** with summary display
-5. **End-to-end flow** from click to summary
+### Hour 17-18: Modal HTML
+33. Create basic modal HTML structure
+34. Add CSS for modal styling
+35. Show/hide modal on button click
+36. Test modal displays correctly
 
-### **Nice-to-Have:**
-- Copy functionality
-- Loading animations
-- Error handling
-- Multiple thread types
+### Hour 19-20: Display Summary
+. Parse JSON response from backend
+. Display TL;DR in modal
+. Add basic formatting
+. Test with real data
 
-### **Time-Saving Tips:**
-- Use existing UI libraries (Tailwind CSS)
-- Start with simpler AI prompts
-- Focus on one platform first (Reddit)
-- Use mock data during development
-- Test incrementally, not at the end
+### Hour 21-22: Copy Function
+. Add copy button to modal
+. Implement copy-to-clipboard
+. Add success feedback
+. Test copy functionality
 
-### **Backup Plan:**
-If AI integration takes too long, create a mock summarization service that returns structured fake data to demonstrate the full UI flow.
-
----
-
-## **📁 Project Structure**
-```
-speed-threads/
-├── chrome-extension/
-│   ├── manifest.json
-│   ├── content.js
-│   ├── popup.html
-│   └── background.js
-├── backend/
-│   ├── main.py
-│   ├── requirements.txt
-│   └── prompts/
-├── shared/
-│   └── types.ts
-├── documentation/
-│   ├── prd.md
-│   └── plan.md
-└── README.md
-```
+### Hour 23-24: Error Handling
+. Add loading spinner
+. Handle API errors gracefully
+. Add timeout handling
+. Test error scenarios
 
 ---
 
-## **🔧 Tech Stack Reminder**
-- **Frontend**: TypeScript/JavaScript + React (injected)
-- **Extension**: Chrome Extension v3
-- **Backend**: FastAPI (Python)
-- **AI Model**: GPT-OSS 20b (local via Ollama)
-- **UI**: Tailwind CSS (for speed)
+## **Phase 4: Polish & Demo (Hours 25-32)**
+
+### Hour 25-26: Better Scraping
+. Improve Reddit comment extraction
+. Handle more comment types
+. Add metadata (upvotes, usernames)
+. Test on complex threads
+
+### Hour 27-28: Enhanced AI
+. Add post type detection
+. Generate bullet points
+. Extract best answer
+. Test with various thread types
+
+### Hour 29-30: UI Polish
+. Improve modal design
+. Add animations
+. Make responsive
+. Test on different screen sizes
+
+### Hour 31-32: Final Testing
+. Test on 10+ different threads
+. Fix any remaining bugs
+. Optimize performance
+. Prepare demo script
 
 ---
 
-## **⚡ Quick Start Commands**
+## **🎯 MVP Success Criteria**
+. Button appears on Reddit threads
+. Button appears on X threads  
+. Clicking button shows loading
+. Modal displays AI summary
+. Copy button works
+. Works on 5+ different threads
+
+---
+
+## **⚡ Quick Commits**
 ```bash
-# Backend setup
-cd backend
-python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
-pip install fastapi uvicorn ollama
-
-# Chrome extension
-cd chrome-extension
-# Load unpacked extension in Chrome developer mode
+# Each commit should be:
+git add .
+git commit -m "Add [specific feature]"
 ```
 
-**Ready to start? Let's begin with Phase 1!** 🚀
+**Total: 32 commits over 32 hours = 1 commit per hour**
