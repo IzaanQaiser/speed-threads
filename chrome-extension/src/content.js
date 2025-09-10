@@ -71,27 +71,72 @@ function injectButton() {
   let targetElement;
 
   if (platform === 'reddit') {
-    // Try multiple Reddit selectors for different layouts
-    targetElement = document.querySelector('[data-testid="post-content"]') || 
-                   document.querySelector('.Post') ||
-                   document.querySelector('[data-testid="post-container"]') ||
-                   document.querySelector('article[data-testid="post"]') ||
-                   document.querySelector('[data-click-id="body"]') ||
-                   document.querySelector('.PostContent') ||
-                   document.querySelector('div[data-testid="post-content"]');
+    console.log('SpeedThreads: Debugging Reddit DOM structure...');
     
-    // If we found a post container, try to find the action bar with share button
+    // Debug: Log all possible Reddit elements
+    const possibleSelectors = [
+      '[data-testid="post-content"]',
+      '.Post',
+      '[data-testid="post-container"]',
+      'article[data-testid="post"]',
+      '[data-click-id="body"]',
+      '.PostContent',
+      'div[data-testid="post-content"]',
+      'shreddit-post',
+      'faceplate-tracker',
+      '[data-testid="post"]',
+      'article',
+      'main',
+      '[role="main"]'
+    ];
+    
+    console.log('SpeedThreads: Testing selectors...');
+    possibleSelectors.forEach(selector => {
+      const element = document.querySelector(selector);
+      if (element) {
+        console.log(`SpeedThreads: Found element with selector "${selector}":`, element);
+      }
+    });
+    
+    // Try to find any article or main content area
+    targetElement = document.querySelector('shreddit-post') ||
+                   document.querySelector('article') ||
+                   document.querySelector('main') ||
+                   document.querySelector('[role="main"]') ||
+                   document.querySelector('[data-testid="post"]') ||
+                   document.querySelector('.Post');
+    
+    // If we found a container, look for action buttons
     if (targetElement) {
-      const actionBar = targetElement.querySelector('[data-testid="post-actions"]') ||
-                       targetElement.querySelector('.PostActions') ||
-                       targetElement.querySelector('[data-click-id="actions"]') ||
-                       targetElement.querySelector('div[role="group"]');
+      console.log('SpeedThreads: Found post container:', targetElement);
       
-      if (actionBar) {
-        targetElement = actionBar;
-        console.log('SpeedThreads: Found Reddit action bar');
+      // Look for action buttons area
+      const actionArea = targetElement.querySelector('[data-testid="post-actions"]') ||
+                        targetElement.querySelector('.PostActions') ||
+                        targetElement.querySelector('[data-click-id="actions"]') ||
+                        targetElement.querySelector('div[role="group"]') ||
+                        targetElement.querySelector('faceplate-tracker') ||
+                        targetElement.querySelector('shreddit-async-loader');
+      
+      if (actionArea) {
+        targetElement = actionArea;
+        console.log('SpeedThreads: Found action area:', actionArea);
       }
     }
+    
+    // Fallback: Try to find any element with "share" text
+    if (!targetElement) {
+      const shareElements = Array.from(document.querySelectorAll('*')).filter(el => 
+        el.textContent && el.textContent.toLowerCase().includes('share')
+      );
+      console.log('SpeedThreads: Found share elements:', shareElements);
+      
+      if (shareElements.length > 0) {
+        targetElement = shareElements[0].closest('div') || shareElements[0].parentElement;
+        console.log('SpeedThreads: Using share element parent:', targetElement);
+      }
+    }
+    
   } else if (platform === 'x') {
     // Find X post container
     targetElement = document.querySelector('[data-testid="tweet"]') ||
@@ -105,7 +150,10 @@ function injectButton() {
     if (platform === 'reddit') {
       const shareButton = targetElement.querySelector('[data-testid="share-button"]') ||
                          targetElement.querySelector('button[aria-label*="Share"]') ||
-                         targetElement.querySelector('button[aria-label*="share"]');
+                         targetElement.querySelector('button[aria-label*="share"]') ||
+                         Array.from(targetElement.querySelectorAll('*')).find(el => 
+                           el.textContent && el.textContent.toLowerCase().includes('share')
+                         );
       
       if (shareButton && shareButton.parentNode) {
         shareButton.parentNode.insertBefore(button, shareButton.nextSibling);
@@ -123,6 +171,8 @@ function injectButton() {
   } else {
     console.log('SpeedThreads: Could not find target element for button injection');
     console.log('SpeedThreads: Available elements:', document.querySelectorAll('*[data-testid]'));
+    console.log('SpeedThreads: All articles:', document.querySelectorAll('article'));
+    console.log('SpeedThreads: All main elements:', document.querySelectorAll('main'));
   }
 }
 
