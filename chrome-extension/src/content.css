@@ -69,30 +69,69 @@
 
 /* X/Twitter specific styling */
 .speedthreads-button[data-platform="x"] {
-  margin-left: 12px !important; /* More spacing for X */
+  display: inline-flex !important; /* Use flex for better alignment in interaction row */
+  margin-left: 0 !important; /* No margin since we're in flex container */
   margin-right: 0 !important;
   margin-top: 0 !important;
   margin-bottom: 0 !important;
-  background: #1d9bf0 !important; /* X blue color */
-  background-color: #1d9bf0 !important;
-  color: white !important;
-  border-radius: 16px !important;
-  padding: 4px 12px !important;
+  background: transparent !important; /* Transparent background to match X buttons */
+  background-color: transparent !important;
+  color: #71767b !important; /* Match X's secondary text color */
+  border: none !important;
+  border-radius: 20px !important;
+  padding: 8px 12px !important; /* More horizontal padding for better spacing */
   font-size: 13px !important;
   font-weight: 400 !important;
-  height: 28px !important;
-  min-width: auto !important;
+  height: 36px !important; /* Match X button height */
+  min-width: auto !important; /* Allow natural width based on content */
+  width: auto !important;
   white-space: nowrap !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  flex-shrink: 0 !important; /* Prevent shrinking */
+  cursor: pointer !important;
+  transition: background-color 0.2s ease !important;
+  /* Add proper spacing */
+  margin-left: 16px !important; /* Increased left margin for better visual separation */
 }
 
 .speedthreads-button[data-platform="x"]:hover {
-  background: #1a8cd8 !important; /* Darker blue on hover */
-  background-color: #1a8cd8 !important;
+  background: rgba(29, 155, 240, 0.1) !important; /* X blue hover background */
+  background-color: rgba(29, 155, 240, 0.1) !important;
+  color: #1d9bf0 !important; /* X blue text on hover */
 }
 
 .speedthreads-button[data-platform="x"]:active {
-  background: #0f7ae5 !important; /* Even darker blue on active */
-  background-color: #0f7ae5 !important;
+  background: rgba(29, 155, 240, 0.2) !important; /* Darker X blue on active */
+  background-color: rgba(29, 155, 240, 0.2) !important;
+  color: #1d9bf0 !important;
+}
+
+/* Ensure parent container allows inline elements for X */
+.speedthreads-button[data-platform="x"] {
+  flex-shrink: 0 !important; /* Prevent button from shrinking */
+}
+
+/* Additional spacing improvements for X button in interaction row */
+.speedthreads-button[data-platform="x"] {
+  /* Ensure consistent spacing with other interaction buttons */
+  margin-left: 16px !important; /* Increased for better visual separation */
+  margin-right: 0 !important;
+}
+
+/* Ensure the interaction row has proper spacing */
+[role="group"]:has(.speedthreads-button[data-platform="x"]) {
+  gap: 8px !important;
+  align-items: center !important;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+}
+
+/* Target the parent container of the views element to ensure inline layout */
+.speedthreads-button[data-platform="x"]:not([style*="display"]) {
+  /* Ensure button maintains inline behavior */
+  display: inline-block !important;
 }
 
 .speedthreads-modal {
