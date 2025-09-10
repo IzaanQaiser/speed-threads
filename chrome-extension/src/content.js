@@ -451,6 +451,13 @@ function injectButton() {
         // Insert the button right after the views element
         viewsElement.parentNode.insertBefore(button, viewsElement.nextSibling);
         console.log('SpeedThreads: Button inserted next to views element');
+        
+        // Ensure the parent container allows inline elements
+        const parent = viewsElement.parentNode;
+        if (parent.style.display === 'block' || parent.style.display === 'flex') {
+          parent.style.display = 'inline-block';
+          console.log('SpeedThreads: Changed parent display to inline-block for X');
+        }
       } else {
         targetElement.appendChild(button);
         console.log('SpeedThreads: Button appended to target element');

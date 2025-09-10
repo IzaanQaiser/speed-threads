@@ -69,6 +69,7 @@
 
 /* X/Twitter specific styling */
 .speedthreads-button[data-platform="x"] {
+  display: inline-block !important; /* Ensure inline display */
   margin-left: 12px !important; /* More spacing for X */
   margin-right: 0 !important;
   margin-top: 0 !important;
@@ -83,6 +84,8 @@
   height: 28px !important;
   min-width: auto !important;
   white-space: nowrap !important;
+  vertical-align: middle !important; /* Align with text baseline */
+  line-height: 1 !important; /* Match text line height */
 }
 
 .speedthreads-button[data-platform="x"]:hover {
@@ -93,6 +96,17 @@
 .speedthreads-button[data-platform="x"]:active {
   background: #ced5da !important; /* Even darker blue on active */
   background-color: #ced5da !important;
+}
+
+/* Ensure parent container allows inline elements for X */
+.speedthreads-button[data-platform="x"] {
+  flex-shrink: 0 !important; /* Prevent button from shrinking */
+}
+
+/* Target the parent container of the views element to ensure inline layout */
+.speedthreads-button[data-platform="x"]:not([style*="display"]) {
+  /* Ensure button maintains inline behavior */
+  display: inline-block !important;
 }
 
 .speedthreads-modal {
