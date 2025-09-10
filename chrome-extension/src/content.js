@@ -52,6 +52,42 @@ function findViewsElement(tweetElement) {
   return null;
 }
 
+// Find the share button in X posts interaction row
+function findXShareButton(tweetElement) {
+  // Look for the share button in the interaction row
+  const shareSelectors = [
+    '[data-testid="tweet"] [role="group"] a[aria-label*="Share"]',
+    '[data-testid="tweet"] [role="group"] a[aria-label*="share"]',
+    'article[role="article"] [role="group"] a[aria-label*="Share"]',
+    'article[role="article"] [role="group"] a[aria-label*="share"]',
+    '[data-testid="tweet"] [role="group"] a[href*="intent/tweet"]',
+    'article[role="article"] [role="group"] a[href*="intent/tweet"]'
+  ];
+  
+  for (const selector of shareSelectors) {
+    const shareButton = tweetElement.querySelector(selector);
+    if (shareButton) {
+      return shareButton;
+    }
+  }
+  
+  // Fallback: look for any link in the interaction row that might be share
+  const interactionRow = tweetElement.querySelector('[role="group"]');
+  if (interactionRow) {
+    const links = interactionRow.querySelectorAll('a');
+    for (const link of links) {
+      const ariaLabel = link.getAttribute('aria-label');
+      const href = link.getAttribute('href');
+      if ((ariaLabel && ariaLabel.toLowerCase().includes('share')) || 
+          (href && href.includes('intent/tweet'))) {
+        return link;
+      }
+    }
+  }
+  
+  return null;
+}
+
 // Track current URL for SPA navigation detection
 let currentUrl = window.location.href;
 
@@ -415,10 +451,16 @@ function injectButton() {
                    document.querySelector('article[role="article"]');
     
     if (targetElement) {
-      // Look for the views element specifically
-      const viewsElement = findViewsElement(targetElement);
-      if (viewsElement) {
-        targetElement = viewsElement.parentNode;
+      // Look for the share button in the interaction row
+      const shareButton = findXShareButton(targetElement);
+      if (shareButton && shareButton.parentNode) {
+        targetElement = shareButton.parentNode; // This should be the interaction row
+      } else {
+        // Fallback: look for the interaction row directly
+        const interactionRow = targetElement.querySelector('[role="group"]');
+        if (interactionRow) {
+          targetElement = interactionRow;
+        }
       }
     }
   }
@@ -443,24 +485,29 @@ function injectButton() {
         console.log('SpeedThreads: Button appended to target element');
       }
     } else if (platform === 'x') {
-      // For X, try to insert next to the views element
-      const viewsElement = findViewsElement(document.querySelector('[data-testid="tweet"]') || 
-                                           document.querySelector('article[role="article"]'));
+      // For X, try to insert next to the share button in the interaction row
+      const tweetElement = document.querySelector('[data-testid="tweet"]') || 
+                          document.querySelector('article[role="article"]');
+      const shareButton = findXShareButton(tweetElement);
       
-      if (viewsElement && viewsElement.parentNode) {
-        // Insert the button right after the views element
-        viewsElement.parentNode.insertBefore(button, viewsElement.nextSibling);
-        console.log('SpeedThreads: Button inserted next to views element');
+      if (shareButton && shareButton.parentNode) {
+        // Insert the button right after the share button
+        shareButton.parentNode.insertBefore(button, shareButton.nextSibling);
+        console.log('SpeedThreads: Button inserted next to share button in interaction row');
         
-        // Ensure the parent container allows inline elements
-        const parent = viewsElement.parentNode;
-        if (parent.style.display === 'block' || parent.style.display === 'flex') {
-          parent.style.display = 'inline-block';
-          console.log('SpeedThreads: Changed parent display to inline-block for X');
+        // Ensure the parent container (interaction row) allows inline elements
+        const parent = shareButton.parentNode;
+        if (parent.style.display === 'block') {
+          parent.style.display = 'flex';
+          parent.style.alignItems = 'center';
+          parent.style.gap = '8px'; // Increased gap for better spacing
+          parent.style.flexWrap = 'nowrap';
+          console.log('SpeedThreads: Changed parent display to flex for X interaction row');
         }
       } else {
+        // Fallback: append to the interaction row
         targetElement.appendChild(button);
-        console.log('SpeedThreads: Button appended to target element');
+        console.log('SpeedThreads: Button appended to interaction row');
       }
     } else {
       targetElement.appendChild(button);
