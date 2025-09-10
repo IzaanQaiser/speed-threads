@@ -14,7 +14,7 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
   line-height: 1.2 !important;
   color: #1c1c1c !important;
-  background: #f6f7f8 !important; /* Use the hover/pressed background as default */
+  background: #f6f7f8 !important; /* Match Reddit's default button background */
   cursor: pointer !important;
   margin: 0 !important;
   padding: 0 8px !important;
@@ -28,6 +28,9 @@
   white-space: nowrap !important;
   z-index: 1000 !important;
   pointer-events: auto !important;
+  /* Force the background to show */
+  background-color: #f6f7f8 !important;
+  background-image: none !important;
 }
 
 .speedthreads-button:hover {
@@ -44,6 +47,30 @@
 .speedthreads-button::before,
 .speedthreads-button::after {
   display: none !important;
+}
+
+/* Ensure button styling is not overridden by Reddit's CSS */
+.speedthreads-button.button {
+  background: #f6f7f8 !important;
+  background-color: #f6f7f8 !important;
+  color: #1c1c1c !important;
+  border: none !important;
+  border-radius: 20px !important;
+  padding: 0 8px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.speedthreads-button.button:hover {
+  background: #e9ecef !important;
+  background-color: #e9ecef !important;
+}
+
+.speedthreads-button.button:active {
+  background: #d1d5db !important;
+  background-color: #d1d5db !important;
 }
 
 .speedthreads-modal {
