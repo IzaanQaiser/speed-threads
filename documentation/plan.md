@@ -66,60 +66,60 @@
 36. Test modal displays correctly
 
 ### Hour 19-20: Display Summary
-. Parse JSON response from backend
-. Display TL;DR in modal
-. Add basic formatting
-. Test with real data
+37. Parse JSON response from backend
+38. Display TL;DR in modal
+39. Add basic formatting
+40. Test with real data
 
 ### Hour 21-22: Copy Function
-. Add copy button to modal
-. Implement copy-to-clipboard
-. Add success feedback
-. Test copy functionality
+41. Add copy button to modal
+42. Implement copy-to-clipboard
+43. Add success feedback
+44. Test copy functionality
 
 ### Hour 23-24: Error Handling
-. Add loading spinner
-. Handle API errors gracefully
-. Add timeout handling
-. Test error scenarios
+45. Add loading spinner
+46. Handle API errors gracefully
+47. Add timeout handling
+48. Test error scenarios
 
 ---
 
 ## **Phase 4: Polish & Demo (Hours 25-32)**
 
 ### Hour 25-26: Better Scraping
-. Improve Reddit comment extraction
-. Handle more comment types
-. Add metadata (upvotes, usernames)
-. Test on complex threads
+49. Improve Reddit comment extraction
+50. Handle more comment types
+51. Add metadata (upvotes, usernames)
+52. Test on complex threads
 
 ### Hour 27-28: Enhanced AI
-. Add post type detection
-. Generate bullet points
-. Extract best answer
-. Test with various thread types
+53. Add post type detection
+54. Generate bullet points
+55. Extract best answer
+56. Test with various thread types
 
 ### Hour 29-30: UI Polish
-. Improve modal design
-. Add animations
-. Make responsive
-. Test on different screen sizes
+57. Improve modal design
+58. Add animations
+59. Make responsive
+60. Test on different screen sizes
 
 ### Hour 31-32: Final Testing
-. Test on 10+ different threads
-. Fix any remaining bugs
-. Optimize performance
-. Prepare demo script
+61. Test on 10+ different threads
+62. Fix any remaining bugs
+63. Optimize performance
+64. Prepare demo script
 
 ---
 
 ## **🎯 MVP Success Criteria**
-. Button appears on Reddit threads
-. Button appears on X threads  
-. Clicking button shows loading
-. Modal displays AI summary
-. Copy button works
-. Works on 5+ different threads
+65. Button appears on Reddit threads
+66. Button appears on X threads  
+67. Clicking button shows loading
+68. Modal displays AI summary
+69. Copy button works
+70. Works on 5+ different threads
 
 ---
 
