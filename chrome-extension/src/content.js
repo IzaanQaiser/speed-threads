@@ -113,7 +113,21 @@ function initialize() {
   // If we're on a supported page, inject immediately
   if (isSupportedPage()) {
     console.log('SpeedThreads: On supported page, initializing injection');
+    // Try immediate injection
     initializeInjection();
+    
+    // Also try after DOM is fully loaded (for refresh cases)
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        console.log('SpeedThreads: DOM loaded, ensuring injection');
+        setTimeout(() => {
+          if (!document.getElementById(CONFIG.BUTTON_ID)) {
+            console.log('SpeedThreads: Button not found after DOM load, re-injecting');
+            initializeInjection();
+          }
+        }, 1000);
+      });
+    }
   } else {
     console.log('SpeedThreads: On feed page, waiting for navigation to supported page');
   }
@@ -122,6 +136,12 @@ function initialize() {
 // Initialize injection logic (separated for re-use)
 function initializeInjection() {
   console.log('SpeedThreads: initializeInjection() called');
+  
+  // Check if we're on a supported page before setting up observer
+  if (!isSupportedPage()) {
+    console.log('SpeedThreads: Not on supported page, skipping injection setup');
+    return;
+  }
   
   // Use MutationObserver for robust injection
   const observer = new MutationObserver((mutations, obs) => {
@@ -194,12 +214,44 @@ function initializeInjection() {
   });
 
   // Start observing the document body for changes
-  observer.observe(document.body, { 
-    childList: true, 
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['class', 'style']
-  });
+  try {
+    if (document.body) {
+      observer.observe(document.body, { 
+        childList: true, 
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class', 'style']
+      });
+      console.log('SpeedThreads: MutationObserver started');
+    } else {
+      console.log('SpeedThreads: document.body not ready, waiting...');
+      // Wait for document.body to be available
+      const checkBody = setInterval(() => {
+        if (document.body) {
+          clearInterval(checkBody);
+          try {
+            observer.observe(document.body, { 
+              childList: true, 
+              subtree: true,
+              attributes: true,
+              attributeFilter: ['class', 'style']
+            });
+            console.log('SpeedThreads: MutationObserver started after delay');
+          } catch (error) {
+            console.error('SpeedThreads: Error starting MutationObserver after delay:', error);
+          }
+        }
+      }, 100);
+      
+      // Stop trying after 10 seconds
+      setTimeout(() => {
+        clearInterval(checkBody);
+        console.log('SpeedThreads: MutationObserver setup timeout');
+      }, 10000);
+    }
+  } catch (error) {
+    console.error('SpeedThreads: Error setting up MutationObserver:', error);
+  }
 
   // Also try immediate injection
   if (!injectButton()) {
@@ -270,6 +322,28 @@ function initializeInjection() {
       }, 500);
     }
   }, 2000); // Check every 2 seconds
+  
+  // Aggressive button check for post pages (every 1 second)
+  if (isSupportedPage()) {
+    setInterval(() => {
+      const button = document.getElementById(CONFIG.BUTTON_ID);
+      if (!button || !button.isConnected || button.offsetParent === null) {
+        console.log('SpeedThreads: Post page - button missing, re-injecting');
+        injectButton();
+      }
+    }, 1000); // Check every 1 second on post pages
+    
+    // Additional safety net for post page refreshes
+    window.addEventListener('load', () => {
+      console.log('SpeedThreads: Window loaded on post page, ensuring button exists');
+      setTimeout(() => {
+        if (!document.getElementById(CONFIG.BUTTON_ID)) {
+          console.log('SpeedThreads: Button missing after window load, injecting');
+          initializeInjection();
+        }
+      }, 2000);
+    });
+  }
 }
 
 // Send keep-alive message to background script
