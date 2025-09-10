@@ -31,30 +31,14 @@
   z-index: 1000 !important;
   pointer-events: auto !important;
   /* Force the background to show */
-  background-color: #ffffff !important;
-  background-image: none !important; /* hello */
-}
-
-.speedthreads-button:hover {
-  background: #e9ecef !important; /* Darker on hover */
-  color: #1c1c1c !important;
-}
-
-.speedthreads-button:active {
-  background: #d1d5db !important; /* Even darker when pressed */
-  transform: none !important;
-}
-
-/* Remove any pseudo-elements */
-.speedthreads-button::before,
-.speedthreads-button::after {
-  display: none !important;
+  background-color: #1c1c1c !important;
+  background-image: none !important;
 }
 
 /* Ensure button styling is not overridden by Reddit's CSS */
 .speedthreads-button.button {
-  background: #ffffff !important;
-  background-color: #ffffff !important;
+  background: #e9ecef !important;
+  background-color: #e9ecef !important;
   color: #1c1c1c !important;
   border: none !important;
   border-radius: 20px !important;
@@ -66,13 +50,13 @@
 }
 
 .speedthreads-button.button:hover {
-  background: #e9ecef !important;
-  background-color: #e9ecef !important;
+  background: #dde2e6 !important;
+  background-color: #dde2e6 !important;
 }
 
 .speedthreads-button.button:active {
-  background: #d1d5db !important;
-  background-color: #d1d5db !important;
+  background: #ced5da !important;
+  background-color: #ced5da !important;
 }
 
 /* Match Reddit's native button spacing */
