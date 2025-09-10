@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpeedThreads Extension Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            background: #f5f5f5;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .test-link {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 5px;
+        }
+        .test-link:hover {
+            background: #0056b3;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .warning { background: #fff3cd; color: #856404; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>🧪 SpeedThreads Extension Test Page</h1>
+    
+    <div class="test-section">
+        <h2>📋 Test Checklist</h2>
+        <ol>
+            <li>Load the Chrome extension from the <code>chrome-extension/</code> folder</li>
+            <li>Visit the test links below</li>
+            <li>Look for the "✨ Summarize with SpeedThreads" button</li>
+            <li>Click the button to test functionality</li>
+            <li>Check browser console for debug messages</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>🔗 Test Links</h2>
+        <p>Click these links to test the extension on real threads:</p>
+        
+        <h3>Reddit Tests:</h3>
+        <a href="https://reddit.com/r/programming/comments/1a2b3c4/test-post" class="test-link" target="_blank">
+            Reddit Programming Thread
+        </a>
+        <a href="https://reddit.com/r/AskReddit/comments/1d4e5f6/what-is-your-favorite-programming-language" class="test-link" target="_blank">
+            Reddit AskReddit Thread
+        </a>
+        
+        <h3>X (Twitter) Tests:</h3>
+        <a href="https://x.com/elonmusk/status/1234567890" class="test-link" target="_blank">
+            X Thread Example
+        </a>
+        <a href="https://x.com/github/status/9876543210" class="test-link" target="_blank">
+            X GitHub Thread
+        </a>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 What to Look For</h2>
+        
+        <div class="status success">
+            <strong>✅ Success:</strong> Button appears below the main post/tweet with gradient styling
+        </div>
+        
+        <div class="status warning">
+            <strong>⚠️ Check Console:</strong> Open DevTools (F12) and look for SpeedThreads messages
+        </div>
+        
+        <div class="status error">
+            <strong>❌ Troubleshooting:</strong> If button doesn't appear, check console for errors
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Expected Console Messages</h2>
+        <pre>
+SpeedThreads content script loaded
+SpeedThreads: reddit page detected (or x page detected)
+SpeedThreads: Button injected successfully
+        </pre>
+    </div>
+
+    <div class="test-section">
+        <h2>🛠 Development Tips</h2>
+        <ul>
+            <li>After making changes to the extension, reload it in <code>chrome://extensions/</code></li>
+            <li>Use the browser's "Inspect Element" to see if the button is in the DOM</li>
+            <li>Check the Network tab to see if any API calls are being made</li>
+            <li>Test on both Reddit and X to ensure cross-platform compatibility</li>
+        </ul>
+    </div>
+
+    <script>
+        // Add some test functionality
+        console.log('SpeedThreads test page loaded');
+        
+        // Check if we're in a test environment
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.log('Running in local test environment');
+        }
+    </script>
+</body>
+</html>
