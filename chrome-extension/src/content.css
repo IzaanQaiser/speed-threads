@@ -1,22 +1,25 @@
 /* SpeedThreads Content Styles - Match Reddit Action Buttons */
 .speedthreads-button {
-  background: transparent;
-  color: var(--color-text-secondary, #878a8c);
-  border: none;
+  background: transparent !important;
+  color: var(--color-text-secondary, #878a8c) !important;
+  border: none !important;
   padding: 8px 12px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 500;
-  cursor: pointer;
+  cursor: pointer !important;
   margin: 0 4px;
   transition: all 0.1s ease;
-  display: inline-flex;
+  display: inline-flex !important;
   align-items: center;
   gap: 6px;
   white-space: nowrap;
   font-family: inherit;
   line-height: 1;
   min-height: 32px;
+  position: relative;
+  z-index: 1000;
+  pointer-events: auto !important;
 }
 
 .speedthreads-button:hover {

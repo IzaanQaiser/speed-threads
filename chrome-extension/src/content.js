@@ -193,15 +193,29 @@ function createButton() {
   button.id = CONFIG.BUTTON_ID;
   button.className = 'speedthreads-button';
   button.innerHTML = 'speedthreads';
-  button.addEventListener('click', handleSummarizeClick);
+  button.type = 'button'; // Prevent form submission
+  button.setAttribute('data-speedthreads', 'true'); // Mark as our button
+  button.setAttribute('aria-label', 'Summarize with SpeedThreads');
+  
+  // Add click event listener with capture phase to ensure we handle it first
+  button.addEventListener('click', handleSummarizeClick, true);
+  
   return button;
 }
 
 // Handle summarize button click
-function handleSummarizeClick() {
+function handleSummarizeClick(event) {
+  // Prevent event from bubbling up to parent elements
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+  
   console.log('SpeedThreads: Summarize button clicked');
   // TODO: Implement scraping and API call
   alert('SpeedThreads: Summarize feature coming soon!');
+  
+  // Return false to prevent any default behavior
+  return false;
 }
 
 // Initialize when script loads
