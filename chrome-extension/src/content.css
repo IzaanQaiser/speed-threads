@@ -1,42 +1,44 @@
 /* SpeedThreads Content Styles - Match Reddit Action Buttons */
 .speedthreads-button {
-  background: transparent !important;
-  color: var(--color-text-secondary, #878a8c) !important;
-  border: none !important;
-  padding: 8px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
+  background: #f6f7f8 !important;
+  color: #1c1c1c !important;
+  border: 1px solid #e1e3e6 !important;
+  padding: 6px 12px !important;
+  border-radius: 20px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
   cursor: pointer !important;
-  margin: 0 4px;
-  transition: all 0.1s ease;
+  margin: 0 4px !important;
+  transition: all 0.1s ease !important;
   display: inline-flex !important;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-  font-family: inherit;
-  line-height: 1;
-  min-height: 32px;
-  position: relative;
-  z-index: 1000;
+  align-items: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+  font-family: inherit !important;
+  line-height: 1 !important;
+  min-height: 32px !important;
+  position: relative !important;
+  z-index: 1000 !important;
   pointer-events: auto !important;
+  box-sizing: border-box !important;
+  text-decoration: none !important;
+  outline: none !important;
 }
 
 .speedthreads-button:hover {
-  background: var(--color-background-hover, #f6f7f8);
-  color: var(--color-text-primary, #1c1c1c);
+  background: #e9ecef !important;
+  color: #1c1c1c !important;
+  border-color: #d1d5db !important;
 }
 
 .speedthreads-button:active {
-  background: var(--color-background-pressed, #e9ecef);
-  transform: scale(0.98);
+  background: #d1d5db !important;
+  transform: scale(0.98) !important;
 }
 
-/* Icon styling to match Reddit buttons */
+/* Remove the sparkle icon and make it look like other Reddit buttons */
 .speedthreads-button::before {
-  content: "✨";
-  font-size: 16px;
-  line-height: 1;
+  display: none !important;
 }
 
 .speedthreads-modal {
