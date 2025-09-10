@@ -4,8 +4,6 @@
 ## **Phase 1: Basic Chrome Extension (Hours 1-8)**
 
 ### Hour 1-2: Project Setup
-1. Create basic project structure with folders
-2. Initialize Chrome extension manifest.json
 3. Add proper host_permissions for Reddit and X
 4. Add activeTab and scripting permissions
 5. Test extension loads in Chrome

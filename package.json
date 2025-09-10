@@ -1,0 +1,25 @@
+{
+  "name": "speed-threads",
+  "version": "1.0.0",
+  "description": "Instantly summarize Reddit and X (Twitter) threads using local AI",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo 'Build script placeholder'",
+    "dev": "echo 'Dev script placeholder'",
+    "test": "echo 'Test script placeholder'"
+  },
+  "keywords": [
+    "chrome-extension",
+    "reddit",
+    "twitter",
+    "ai",
+    "summarization",
+    "gpt-oss"
+  ],
+  "author": "Izaan",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/chrome": "^0.0.254"
+  },
+  "dependencies": {}
+}

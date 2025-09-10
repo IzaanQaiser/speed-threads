@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "SpeedThreads",
+  "version": "1.0.0",
+  "description": "Instantly summarize Reddit and X (Twitter) threads using local AI",
+  
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  
+  "host_permissions": [
+    "https://*.reddit.com/*",
+    "https://*.x.com/*"
+  ],
+  
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.reddit.com/r/*/comments/*",
+        "https://*.x.com/*/status/*"
+      ],
+      "js": ["src/content.js"],
+      "css": ["src/content.css"]
+    }
+  ],
+  
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  
+  "action": {
+    "default_popup": "src/popup.html",
+    "default_title": "SpeedThreads"
+  }
+}
