@@ -23,11 +23,11 @@ All this — **locally and securely**, powered by GPT-OSS models like `llama3-8b
 
 ---
 
-## 🧱 Architecture Overview
-  A[Chrome Extension] --> B[Content Script]
-  B --> C[Scrape Thread Data]
-  C --> D[Send to Backend API]
-  D --> E[FastAPI Server (Python)]
-  E --> F[Local GPT-OSS Model]
-  F --> G[Structured Summary Output]
-  G --> H[Rendered Modal in UI]
+## 🧱 Architecture Overview <br>
+  A[Chrome Extension] --> B[Content Script] <br>
+  B --> C[Scrape Thread Data] <br>
+  C --> D[Send to Backend API] <br>
+  D --> E[FastAPI Server (Python)] <br>
+  E --> F[Local GPT-OSS Model] <br>
+  F --> G[Structured Summary Output] <br>
+  G --> H[Rendered Modal in UI] <br>
