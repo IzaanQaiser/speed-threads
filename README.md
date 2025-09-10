@@ -24,9 +24,6 @@ All this — **locally and securely**, powered by GPT-OSS models like `llama3-8b
 ---
 
 ## 🧱 Architecture Overview
-
-```mermaid
-graph TD
   A[Chrome Extension] --> B[Content Script]
   B --> C[Scrape Thread Data]
   C --> D[Send to Backend API]
