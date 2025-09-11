@@ -2,6 +2,8 @@
 
 1. [DONE] Chrome Extension Setup – Configure permissions, load into Chrome, and inject a “Summarize with SpeedThreads” button into Reddit and X thread pages.
 <br>
+st-1-1: Reddit bottom right chat window when speedthreads button is pressed
+<br>
 2. Basic Scraping – Extract post titles, text, and replies (with metadata like usernames and upvotes) from Reddit, then extend support to X.
 <br>
 3. Backend API (FastAPI) – Build a simple /summarize endpoint with request/response schemas, mock responses, and CORS enabled.

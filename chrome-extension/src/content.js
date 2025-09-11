@@ -6,9 +6,12 @@ const originalError = console.error;
 console.error = function(...args) {
   const message = args.join(' ');
   // Filter out Google Fonts CSP errors that are not our fault
-  if (message.includes('Refused to load the font') && 
-      message.includes('fonts.gstatic.com') && 
-      message.includes('Content Security Policy')) {
+  if ((message.includes('Refused to load the font') || 
+       message.includes('Refused to load the stylesheet')) && 
+      (message.includes('fonts.gstatic.com') || 
+       message.includes('fonts.googleapis.com')) && 
+      (message.includes('Content Security Policy') || 
+       message.includes('CSP'))) {
     return; // Don't log these errors
   }
   originalError.apply(console, args);
@@ -19,7 +22,8 @@ const CONFIG = {
   REDDIT_PATTERN: /reddit\.com\/r\/[^\/]+\/comments\/[^\/]+/,
   X_PATTERN: /x\.com\/[^\/]+\/status\/\d+/,
   BUTTON_ID: 'speedthreads-summarize-btn',
-  MODAL_ID: 'speedthreads-modal'
+  MODAL_ID: 'speedthreads-modal',
+  CHATBOT_ID: 'speedthreads-chatbot'
 };
 
 // Portal and tooltip system for X platform only
@@ -48,7 +52,7 @@ function getTooltip() {
     t.className = 'speedthreads-tooltip';
     t.textContent = 'Summarise threads and replies with SpeedThreads';
     t.style.position = 'fixed';
-    t.style.background = '#16181c';
+    t.style.background = 'rgba(0, 0, 0, 0.6)';
     t.style.color = '#fff';
     t.style.padding = '6px 8px';
     t.style.borderRadius = '6px';
@@ -115,12 +119,19 @@ window.addEventListener('resize', requestReposition, true);
 // Reddit tooltip system (CSS-based, traditional tooltips)
 function attachRedditTooltipHandlers() {
   const root = document.documentElement;
+  let redditTooltipTimeout = null;
 
   root.addEventListener('mouseover', (e) => {
     const btn = e.target?.closest('.speedthreads-button[data-platform="reddit"]');
     if (btn) {
-      // Show Reddit tooltip using CSS
-      btn.setAttribute('data-tooltip', 'true');
+      // Clear any existing timeout
+      if (redditTooltipTimeout) {
+        clearTimeout(redditTooltipTimeout);
+      }
+      // Show Reddit tooltip after 500ms delay
+      redditTooltipTimeout = setTimeout(() => {
+        btn.setAttribute('data-tooltip', 'true');
+      }, 700);
     }
   }, true);
 
@@ -130,6 +141,11 @@ function attachRedditTooltipHandlers() {
     const leftBtn = from?.closest('.speedthreads-button[data-platform="reddit"]');
     const enteredBtn = to?.closest?.('.speedthreads-button[data-platform="reddit"]');
     if (leftBtn && leftBtn !== enteredBtn) {
+      // Clear timeout and hide tooltip
+      if (redditTooltipTimeout) {
+        clearTimeout(redditTooltipTimeout);
+        redditTooltipTimeout = null;
+      }
       leftBtn.removeAttribute('data-tooltip');
     }
   }, true);
@@ -138,10 +154,20 @@ function attachRedditTooltipHandlers() {
 // X tooltip system (portal-based)
 function attachXTooltipHandlers() {
   const root = document.documentElement;
+  let xTooltipTimeout = null;
 
   root.addEventListener('mouseover', (e) => {
     const btn = e.target?.closest('.speedthreads-button[data-platform="x"]');
-    if (btn) showTooltipFor(btn);
+    if (btn) {
+      // Clear any existing timeout
+      if (xTooltipTimeout) {
+        clearTimeout(xTooltipTimeout);
+      }
+      // Show X tooltip after 500ms delay
+      xTooltipTimeout = setTimeout(() => {
+        showTooltipFor(btn);
+      }, 500);
+    }
   }, true);
 
   root.addEventListener('mouseout', (e) => {
@@ -149,7 +175,14 @@ function attachXTooltipHandlers() {
     const to = e.relatedTarget || null;
     const leftBtn = from?.closest('.speedthreads-button[data-platform="x"]');
     const enteredBtn = to?.closest?.('.speedthreads-button[data-platform="x"]');
-    if (leftBtn && leftBtn !== enteredBtn) hideTooltip();
+    if (leftBtn && leftBtn !== enteredBtn) {
+      // Clear timeout and hide tooltip
+      if (xTooltipTimeout) {
+        clearTimeout(xTooltipTimeout);
+        xTooltipTimeout = null;
+      }
+      hideTooltip();
+    }
   }, true);
 }
 
@@ -161,6 +194,242 @@ function attachTooltipHandlers() {
 
 // Ensure handlers are active
 attachTooltipHandlers();
+
+// Chatbot System
+class SpeedThreadsChatbot {
+  constructor() {
+    this.isOpen = false;
+    this.messages = [
+      {
+        id: 1,
+        type: 'ai',
+        content: 'Hi! I\'m SpeedThreads AI. I can help you summarize and understand complex discussions on Reddit and X.',
+        timestamp: new Date(Date.now() - 300000) // 5 minutes ago
+      },
+      {
+        id: 2,
+        type: 'user',
+        content: 'Can you summarize this Reddit thread for me?',
+        timestamp: new Date(Date.now() - 240000) // 4 minutes ago
+      },
+      {
+        id: 3,
+        type: 'ai',
+        content: 'Of course! I\'ve analyzed the thread and here\'s a summary:\n\n**Main Topic:** Discussion about the latest tech trends\n**Key Points:**\n• User A shared insights about AI developments\n• User B raised concerns about privacy\n• Community consensus on responsible AI use\n\n**TL;DR:** A thoughtful discussion on balancing AI innovation with ethical considerations.',
+        timestamp: new Date(Date.now() - 180000) // 3 minutes ago
+      },
+      {
+        id: 4,
+        type: 'user',
+        content: 'That\'s really helpful! Can you also suggest a good reply?',
+        timestamp: new Date(Date.now() - 120000) // 2 minutes ago
+      }
+    ];
+    this.init();
+  }
+
+  init() {
+    this.createChatbot();
+    this.attachEventListeners();
+  }
+
+  createChatbot() {
+    // Create chatbot container
+    const chatbot = document.createElement('div');
+    chatbot.id = CONFIG.CHATBOT_ID;
+    chatbot.className = 'speedthreads-chatbot';
+    chatbot.setAttribute('data-platform', getPlatform());
+    
+    // Create toggle button
+    const toggleButton = document.createElement('button');
+    toggleButton.className = 'speedthreads-chatbot-toggle';
+    toggleButton.innerHTML = `
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
+    
+    // Create chat window
+    const chatWindow = document.createElement('div');
+    chatWindow.className = 'speedthreads-chatbot-window';
+    chatWindow.innerHTML = `
+      <div class="speedthreads-chatbot-header">
+        <div class="speedthreads-chatbot-title">
+          <span>speedthreads</span>
+        </div>
+        <div class="speedthreads-chatbot-actions">
+          <button class="speedthreads-chatbot-close">×</button>
+        </div>
+      </div>
+      <div class="speedthreads-chatbot-content">
+        <div class="speedthreads-chatbot-messages"></div>
+        <div class="speedthreads-chatbot-input-container">
+          <input type="text" class="speedthreads-chatbot-input" placeholder="Ask about this thread...">
+          <button class="speedthreads-chatbot-send">Send</button>
+        </div>
+      </div>
+    `;
+    
+    chatbot.appendChild(toggleButton);
+    chatbot.appendChild(chatWindow);
+    
+    // Add to portal
+    const portal = ensurePortal();
+    portal.appendChild(chatbot);
+    
+    // Render messages
+    this.renderMessages();
+  }
+
+  renderMessages() {
+    const messagesContainer = document.querySelector('.speedthreads-chatbot-messages');
+    if (!messagesContainer) return;
+    
+    messagesContainer.innerHTML = '';
+    
+    this.messages.forEach(message => {
+      const messageEl = document.createElement('div');
+      messageEl.className = `speedthreads-chatbot-message ${message.type}`;
+      messageEl.innerHTML = `
+        <div class="speedthreads-chatbot-message-content">
+          ${message.content.replace(/\n/g, '<br>')}
+        </div>
+      `;
+      messagesContainer.appendChild(messageEl);
+    });
+    
+    // Scroll to bottom for vertical layout
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+
+  toggle() {
+    // Check if the SpeedThreads button is visible before showing popup
+    const button = document.getElementById(CONFIG.BUTTON_ID);
+    if (!button || !button.isConnected || button.offsetParent === null) {
+      console.log('SpeedThreads: Button not visible, hiding popup');
+      this.isOpen = false;
+      const chatbot = document.getElementById(CONFIG.CHATBOT_ID);
+      if (chatbot) {
+        chatbot.classList.remove('open');
+      }
+      return;
+    }
+
+    this.isOpen = !this.isOpen;
+    const chatbot = document.getElementById(CONFIG.CHATBOT_ID);
+    if (chatbot) {
+      chatbot.classList.toggle('open', this.isOpen);
+    }
+  }
+
+  addMessage(content, type = 'user') {
+    const newMessage = {
+      id: Date.now(),
+      type,
+      content,
+      timestamp: new Date()
+    };
+    
+    this.messages.push(newMessage);
+    this.renderMessages();
+  }
+
+  attachEventListeners() {
+    // Toggle button
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.speedthreads-chatbot-toggle')) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.toggle();
+      }
+    });
+
+    // Close button
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.speedthreads-chatbot-close')) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.isOpen = false;
+        const chatbot = document.getElementById(CONFIG.CHATBOT_ID);
+        if (chatbot) {
+          chatbot.classList.remove('open');
+        }
+      }
+    });
+
+
+    // Send button and Enter key
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.speedthreads-chatbot-send')) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.handleSendMessage();
+      }
+    });
+
+    document.addEventListener('keypress', (e) => {
+      if (e.target.closest('.speedthreads-chatbot-input') && e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        this.handleSendMessage();
+      }
+    });
+
+    // Prevent scroll propagation from chatbot to page
+    document.addEventListener('wheel', (e) => {
+      if (e.target.closest('.speedthreads-chatbot-messages')) {
+        e.stopPropagation();
+      }
+    }, { passive: false });
+
+    // Prevent scroll propagation from chatbot to page
+    document.addEventListener('scroll', (e) => {
+      if (e.target.closest('.speedthreads-chatbot-messages')) {
+        e.stopPropagation();
+      }
+    }, { passive: false });
+  }
+
+  handleSendMessage() {
+    const input = document.querySelector('.speedthreads-chatbot-input');
+    if (!input) return;
+    
+    const message = input.value.trim();
+    if (!message) return;
+    
+    // Add user message
+    this.addMessage(message, 'user');
+    
+    // Clear input
+    input.value = '';
+    
+    // Simulate AI response (for demo)
+    setTimeout(() => {
+      this.addMessage('Thanks for your message! I\'m here to help with thread summaries and analysis.', 'ai');
+    }, 1000);
+  }
+}
+
+// Initialize chatbot
+let chatbot = null;
+
+// Function to check if button is visible and hide popup if not
+function checkButtonVisibility() {
+  const button = document.getElementById(CONFIG.BUTTON_ID);
+  const chatbotEl = document.getElementById(CONFIG.CHATBOT_ID);
+  
+  if (!button || !button.isConnected || button.offsetParent === null) {
+    // Button is not visible, hide popup if it's open
+    if (chatbotEl && chatbotEl.classList.contains('open')) {
+      console.log('SpeedThreads: Button not visible, hiding popup');
+      chatbotEl.classList.remove('open');
+      if (chatbot) {
+        chatbot.isOpen = false;
+      }
+    }
+  }
+}
 
 // Check if we're on a supported page
 function isSupportedPage() {
@@ -465,6 +734,9 @@ function initializeInjection() {
       console.log('SpeedThreads: Periodic re-injection attempt');
       injectButton();
     }
+    
+    // Check button visibility and hide popup if needed
+    checkButtonVisibility();
   }, 5000);
   
   // Also check on page visibility change (for SPA navigation)
@@ -476,6 +748,9 @@ function initializeInjection() {
           console.log('SpeedThreads: Re-injection on visibility change');
           injectButton();
         }
+        
+        // Check button visibility and hide popup if needed
+        checkButtonVisibility();
       }, 1000);
     }
   });
@@ -520,6 +795,9 @@ function initializeInjection() {
         console.log('SpeedThreads: Post page - button missing, re-injecting');
         injectButton();
       }
+      
+      // Check button visibility and hide popup if needed
+      checkButtonVisibility();
     }, 1000); // Check every 1 second on post pages
     
     // Additional safety net for post page refreshes
@@ -700,6 +978,150 @@ function createButton() {
   return button;
 }
 
+// Reddit Content Scraper
+function scrapeRedditContent() {
+  console.log('SpeedThreads: Starting Reddit content scraping...');
+  
+  try {
+    // Find the main post container
+    const postElement = document.querySelector('shreddit-post') || 
+                       document.querySelector('article[data-testid="post-container"]') ||
+                       document.querySelector('article');
+    
+    if (!postElement) {
+      console.error('SpeedThreads: Could not find Reddit post container');
+      return null;
+    }
+
+    // Extract post content
+    const postData = extractRedditPost(postElement);
+    
+    // Extract replies/comments
+    const replies = extractRedditReplies();
+    
+    const threadData = {
+      platform: 'reddit',
+      post: postData,
+      replies: replies
+    };
+    
+    console.log('SpeedThreads: Reddit content scraped successfully:', threadData);
+    return threadData;
+    
+  } catch (error) {
+    console.error('SpeedThreads: Error scraping Reddit content:', error);
+    return null;
+  }
+}
+
+// Simplified scraper - no upvotes or type detection
+
+// Extract main Reddit post data
+function extractRedditPost(postElement) {
+  const post = {
+    title: '',
+    text: '',
+    author: '',
+    url: window.location.href
+  };
+
+  console.log('SpeedThreads: Extracting post data...');
+
+  // Extract title
+  const titleElement = postElement.querySelector('[data-testid="post-content"] h1') ||
+                      postElement.querySelector('h1[slot="title"]') ||
+                      postElement.querySelector('h1') ||
+                      postElement.querySelector('[slot="title"]');
+  
+  if (titleElement) {
+    post.title = titleElement.textContent?.trim() || '';
+  }
+
+  // Extract post text content
+  const textElement = postElement.querySelector('[data-testid="post-content"] [slot="text-body"]') ||
+                     postElement.querySelector('[slot="text-body"]') ||
+                     postElement.querySelector('[data-testid="post-content"] p') ||
+                     postElement.querySelector('.post-content') ||
+                     postElement.querySelector('[data-click-id="text-body"]');
+  
+  if (textElement) {
+    post.text = textElement.textContent?.trim() || '';
+  }
+
+  // Skip author extraction - not needed
+  post.author = '';
+
+  console.log(`SpeedThreads: Post title: "${post.title}"`);
+  console.log(`SpeedThreads: Post text: "${post.text.substring(0, 100)}..."`);
+
+  return post;
+}
+
+// Extract Reddit replies/comments
+function extractRedditReplies() {
+  const replies = [];
+  
+  console.log('SpeedThreads: Extracting comments...');
+  
+  // Try multiple selectors for comments
+  const commentSelectors = [
+    'div[data-testid="comment"]',
+    'shreddit-comment',
+    '[data-testid="comment"]',
+    '.Comment',
+    '[data-click-id="comment"]'
+  ];
+  
+  let commentElements = [];
+  
+  for (const selector of commentSelectors) {
+    commentElements = document.querySelectorAll(selector);
+    if (commentElements.length > 0) {
+      console.log(`SpeedThreads: Found ${commentElements.length} comments using selector: ${selector}`);
+      break;
+    }
+  }
+  
+  if (commentElements.length === 0) {
+    console.log('SpeedThreads: No comments found with any selector');
+    return replies;
+  }
+
+  // Process each comment (limit to first 20 for performance)
+  const maxComments = Math.min(commentElements.length, 20);
+  
+  for (let i = 0; i < maxComments; i++) {
+    const commentElement = commentElements[i];
+    const reply = extractRedditComment(commentElement);
+    
+    if (reply && reply.text.trim()) {
+      replies.push(reply);
+    }
+  }
+  
+  console.log(`SpeedThreads: Extracted ${replies.length} replies`);
+  return replies;
+}
+
+// Extract individual Reddit comment
+function extractRedditComment(commentElement) {
+  const reply = {
+    text: '',
+    author: ''
+  };
+
+  // Extract comment text using the correct selector
+  const textElement = commentElement.querySelector('p');
+  if (textElement) {
+    reply.text = textElement.textContent?.trim() || '';
+  }
+
+  // Skip author extraction - not needed
+  reply.author = '';
+
+  return reply;
+}
+
 // Handle summarize button click
 function handleSummarizeClick(event) {
   // Prevent event from bubbling up to parent elements
@@ -708,8 +1130,34 @@ function handleSummarizeClick(event) {
   event.stopImmediatePropagation();
   
   console.log('SpeedThreads: Summarize button clicked');
-  // TODO: Implement scraping and API call
-  alert('SpeedThreads: Summarize feature coming soon!');
+  
+  // Show chatbot when button is clicked
+  if (!chatbot) {
+    chatbot = new SpeedThreadsChatbot();
+  }
+  chatbot.toggle();
+  
+  // Scrape Reddit content and send to chatbot
+  if (getPlatform() === 'reddit') {
+    const threadData = scrapeRedditContent();
+    if (threadData) {
+      // Log scraped data in AI-optimized format
+      console.log('=== REDDIT THREAD DATA ===');
+      console.log(`TITLE: ${threadData.post.title}`);
+      console.log(`POST: ${threadData.post.text}`);
+      console.log('COMMENTS:');
+      threadData.replies.forEach((reply, index) => {
+        console.log(`${index + 1}. ${reply.text}`);
+      });
+      console.log('=== END THREAD DATA ===');
+      
+      // Send the scraped data to the chatbot
+      chatbot.addMessage('user', `Please summarize this Reddit thread: ${threadData.post.title || 'Untitled Post'}`);
+      chatbot.addMessage('ai', `I've scraped the thread data. Here's what I found:\n\n**Post:** ${threadData.post.title}\n**Replies:** ${threadData.replies.length} comments\n\n*Check the console for detailed scraped data!*`);
+    } else {
+      chatbot.addMessage('ai', 'Sorry, I couldn\'t scrape the Reddit content. Please try again.');
+    }
+  }
   
   // Return false to prevent any default behavior
   return false;

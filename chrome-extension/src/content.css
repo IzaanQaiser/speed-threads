@@ -176,7 +176,7 @@
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
-  background: #16181c;
+  background: rgba(0, 0, 0, 0.6);
   color: #fff;
   padding: 6px 8px;
   border-radius: 6px;
@@ -200,7 +200,7 @@
 /* X tooltip styling - now lives in portal for X platform only */
 .speedthreads-tooltip {
   position: fixed;
-  background: #16181c;
+  background: rgba(0, 0, 0, 0.6);
   color: #fff;
   padding: 6px 8px;
   border-radius: 6px;
@@ -211,5 +211,346 @@
   pointer-events: none;
   transform: translateX(-50%);
   display: none;
+}
+
+/* Chatbot Interface - Horizontal Design */
+.speedthreads-chatbot {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2147483646;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  display: none;
+  pointer-events: auto;
+  padding: 0 20px 20px 20px;
+}
+
+.speedthreads-chatbot.open {
+  display: block;
+}
+
+.speedthreads-chatbot-toggle {
+  display: none;
+}
+
+.speedthreads-chatbot-window {
+  position: relative;
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+  height: 500px;
+  background: rgba(68, 68, 68, 0.3);
+  backdrop-filter: blur(60px) saturate(250%) brightness(1.3) contrast(1.1);
+  -webkit-backdrop-filter: blur(60px) saturate(250%) brightness(1.3) contrast(1.1);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  transform: translateY(20px) scale(0.95);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.speedthreads-chatbot.open .speedthreads-chatbot-window {
+  display: flex;
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.speedthreads-chatbot-header {
+  background: transparent;
+  color: white;
+  padding: 20px 24px 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.speedthreads-chatbot-title {
+  display: flex;
+  align-items: center;
+}
+
+.speedthreads-chatbot-title span {
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+}
+
+.speedthreads-chatbot-actions {
+  display: flex;
+  align-items: center;
+}
+
+.speedthreads-chatbot-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.speedthreads-chatbot-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.speedthreads-chatbot-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0 20px 16px 20px;
+  gap: 12px;
+  min-height: 0;
+}
+
+.speedthreads-chatbot-messages {
+  flex: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.6) rgba(255, 255, 255, 0.1);
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  min-height: 0;
+  padding-right: 8px;
+  margin-right: -8px;
+}
+
+/* Custom scrollbar for webkit browsers */
+.speedthreads-chatbot-messages::-webkit-scrollbar {
+  width: 6px;
+  position: absolute;
+  right: 0;
+}
+
+.speedthreads-chatbot-messages::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  margin: 4px 0;
+}
+
+.speedthreads-chatbot-messages::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+.speedthreads-chatbot-messages::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.speedthreads-chatbot-message {
+  display: flex;
+  flex-direction: column;
+  max-width: 75%;
+  margin-right: 4px;
+}
+
+.speedthreads-chatbot-message.user {
+  align-self: flex-end;
+}
+
+.speedthreads-chatbot-message.ai {
+  align-self: flex-start;
+}
+
+.speedthreads-chatbot-message-content {
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.4;
+  word-wrap: break-word;
+  white-space: normal;
+}
+
+.speedthreads-chatbot-message.user .speedthreads-chatbot-message-content {
+  background: rgba(100, 120, 200, 0.15);
+  backdrop-filter: blur(20px) saturate(180%) brightness(1.2) contrast(1.1);
+  -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.2) contrast(1.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 4px 12px rgba(100, 120, 200, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.speedthreads-chatbot-message.ai .speedthreads-chatbot-message-content {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px) saturate(150%) brightness(1.1) contrast(1.05);
+  -webkit-backdrop-filter: blur(20px) saturate(150%) brightness(1.1) contrast(1.05);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+
+.speedthreads-chatbot-input-container {
+  border-radius: 12px;
+  border: none;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 8px 12px;
+  height: 44px;
+  min-height: 44px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.speedthreads-chatbot-input {
+  flex: 1;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  min-width: 0;
+  height: 28px;
+  display: flex;
+  align-items: center;
+}
+
+.speedthreads-chatbot-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.speedthreads-chatbot-input:focus {
+  border-color: rgba(100, 120, 200, 0.8);
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: 0 8px 25px rgba(100, 120, 200, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.speedthreads-chatbot-send {
+  background: rgba(100, 120, 200, 0.3);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  pointer-events: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.speedthreads-chatbot-send:hover {
+  transform: translateY(-1px);
+  background: rgba(100, 120, 200, 0.9);
+  box-shadow: 0 4px 12px rgba(100, 120, 200, 0.4);
+}
+
+.speedthreads-chatbot-send:active {
+  transform: translateY(0);
+  background: rgba(100, 120, 200, 0.7);
+}
+
+/* Reddit-specific send button alignment fix */
+.speedthreads-button[data-platform="reddit"] ~ * .speedthreads-chatbot-send,
+.speedthreads-chatbot[data-platform="reddit"] .speedthreads-chatbot-send {
+  height: 32px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .speedthreads-chatbot {
+    padding: 0 10px 10px 10px;
+  }
+  
+  .speedthreads-chatbot-window {
+    height: 450px;
+    max-width: 85%;
+  }
+  
+  .speedthreads-chatbot-header {
+    padding: 16px 20px 12px 20px;
+  }
+  
+  .speedthreads-chatbot-title span {
+    font-size: 14px;
+  }
+  
+  .speedthreads-chatbot-content {
+    padding: 0 16px 12px 16px;
+  }
+  
+  .speedthreads-chatbot-input-container {
+    padding: 6px 10px;
+    height: 40px;
+    min-height: 40px;
+  }
+  
+  .speedthreads-chatbot-input {
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+  
+  .speedthreads-chatbot-send {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+  
+  .speedthreads-chatbot-message-content {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+  
+  .speedthreads-chatbot-messages {
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .speedthreads-chatbot-window {
+    height: 400px;
+    max-width: 90%;
+  }
+  
+  .speedthreads-chatbot-header {
+    padding: 12px 16px 8px 16px;
+  }
+  
+  .speedthreads-chatbot-content {
+    padding: 0 12px 10px 12px;
+  }
+  
+  .speedthreads-chatbot-input-container {
+    padding: 6px 8px;
+    height: 38px;
+    min-height: 38px;
+  }
+  
+  .speedthreads-chatbot-messages {
+    max-height: 250px;
+  }
 }
 
