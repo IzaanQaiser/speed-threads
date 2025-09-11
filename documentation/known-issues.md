@@ -3,3 +3,5 @@
 2. extension font error
 3. dark and light mode not working
 4. reddit send button in chat popup is not aligned vertivcally
+5. cant scrape upvotes
+6. animate spreadsheets window popup
