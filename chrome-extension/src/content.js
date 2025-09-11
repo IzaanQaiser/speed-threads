@@ -112,9 +112,32 @@ function requestReposition() {
 window.addEventListener('scroll', requestReposition, true);
 window.addEventListener('resize', requestReposition, true);
 
-// Call this after you inject buttons or once at startup - X platform only
-function attachTooltipHandlers() {
-  const root = document.documentElement; // page root for delegation
+// Reddit tooltip system (CSS-based, traditional tooltips)
+function attachRedditTooltipHandlers() {
+  const root = document.documentElement;
+
+  root.addEventListener('mouseover', (e) => {
+    const btn = e.target?.closest('.speedthreads-button[data-platform="reddit"]');
+    if (btn) {
+      // Show Reddit tooltip using CSS
+      btn.setAttribute('data-tooltip', 'true');
+    }
+  }, true);
+
+  root.addEventListener('mouseout', (e) => {
+    const from = e.target;
+    const to = e.relatedTarget || null;
+    const leftBtn = from?.closest('.speedthreads-button[data-platform="reddit"]');
+    const enteredBtn = to?.closest?.('.speedthreads-button[data-platform="reddit"]');
+    if (leftBtn && leftBtn !== enteredBtn) {
+      leftBtn.removeAttribute('data-tooltip');
+    }
+  }, true);
+}
+
+// X tooltip system (portal-based)
+function attachXTooltipHandlers() {
+  const root = document.documentElement;
 
   root.addEventListener('mouseover', (e) => {
     const btn = e.target?.closest('.speedthreads-button[data-platform="x"]');
@@ -128,6 +151,12 @@ function attachTooltipHandlers() {
     const enteredBtn = to?.closest?.('.speedthreads-button[data-platform="x"]');
     if (leftBtn && leftBtn !== enteredBtn) hideTooltip();
   }, true);
+}
+
+// Attach both tooltip systems
+function attachTooltipHandlers() {
+  attachRedditTooltipHandlers();
+  attachXTooltipHandlers();
 }
 
 // Ensure handlers are active

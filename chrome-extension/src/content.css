@@ -165,7 +165,39 @@
   pointer-events: none;
 }
 
-/* Tooltip styling - now lives in portal for X platform only */
+/* Reddit tooltip styling (CSS-based) */
+.speedthreads-button[data-platform="reddit"] {
+  position: relative;
+}
+
+.speedthreads-button[data-platform="reddit"]::after {
+  content: 'Summarise threads and replies with SpeedThreads';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #16181c;
+  color: #fff;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 400;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,.3);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  z-index: 1000;
+  margin-bottom: 8px;
+}
+
+.speedthreads-button[data-platform="reddit"][data-tooltip="true"]::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* X tooltip styling - now lives in portal for X platform only */
 .speedthreads-tooltip {
   position: fixed;
   background: #16181c;
