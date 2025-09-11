@@ -176,7 +176,7 @@
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
-  background: #16181c;
+  background: rgba(0, 0, 0, 0.6);
   color: #fff;
   padding: 6px 8px;
   border-radius: 6px;
@@ -200,7 +200,7 @@
 /* X tooltip styling - now lives in portal for X platform only */
 .speedthreads-tooltip {
   position: fixed;
-  background: #16181c;
+  background: rgba(0, 0, 0, 0.6);
   color: #fff;
   padding: 6px 8px;
   border-radius: 6px;

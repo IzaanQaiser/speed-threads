@@ -6,9 +6,12 @@ const originalError = console.error;
 console.error = function(...args) {
   const message = args.join(' ');
   // Filter out Google Fonts CSP errors that are not our fault
-  if (message.includes('Refused to load the font') && 
-      message.includes('fonts.gstatic.com') && 
-      message.includes('Content Security Policy')) {
+  if ((message.includes('Refused to load the font') || 
+       message.includes('Refused to load the stylesheet')) && 
+      (message.includes('fonts.gstatic.com') || 
+       message.includes('fonts.googleapis.com')) && 
+      (message.includes('Content Security Policy') || 
+       message.includes('CSP'))) {
     return; // Don't log these errors
   }
   originalError.apply(console, args);
@@ -48,7 +51,7 @@ function getTooltip() {
     t.className = 'speedthreads-tooltip';
     t.textContent = 'Summarise threads and replies with SpeedThreads';
     t.style.position = 'fixed';
-    t.style.background = '#16181c';
+    t.style.background = 'rgba(0, 0, 0, 0.6)';
     t.style.color = '#fff';
     t.style.padding = '6px 8px';
     t.style.borderRadius = '6px';
@@ -115,12 +118,19 @@ window.addEventListener('resize', requestReposition, true);
 // Reddit tooltip system (CSS-based, traditional tooltips)
 function attachRedditTooltipHandlers() {
   const root = document.documentElement;
+  let redditTooltipTimeout = null;
 
   root.addEventListener('mouseover', (e) => {
     const btn = e.target?.closest('.speedthreads-button[data-platform="reddit"]');
     if (btn) {
-      // Show Reddit tooltip using CSS
-      btn.setAttribute('data-tooltip', 'true');
+      // Clear any existing timeout
+      if (redditTooltipTimeout) {
+        clearTimeout(redditTooltipTimeout);
+      }
+      // Show Reddit tooltip after 500ms delay
+      redditTooltipTimeout = setTimeout(() => {
+        btn.setAttribute('data-tooltip', 'true');
+      }, 700);
     }
   }, true);
 
@@ -130,6 +140,11 @@ function attachRedditTooltipHandlers() {
     const leftBtn = from?.closest('.speedthreads-button[data-platform="reddit"]');
     const enteredBtn = to?.closest?.('.speedthreads-button[data-platform="reddit"]');
     if (leftBtn && leftBtn !== enteredBtn) {
+      // Clear timeout and hide tooltip
+      if (redditTooltipTimeout) {
+        clearTimeout(redditTooltipTimeout);
+        redditTooltipTimeout = null;
+      }
       leftBtn.removeAttribute('data-tooltip');
     }
   }, true);
@@ -138,10 +153,20 @@ function attachRedditTooltipHandlers() {
 // X tooltip system (portal-based)
 function attachXTooltipHandlers() {
   const root = document.documentElement;
+  let xTooltipTimeout = null;
 
   root.addEventListener('mouseover', (e) => {
     const btn = e.target?.closest('.speedthreads-button[data-platform="x"]');
-    if (btn) showTooltipFor(btn);
+    if (btn) {
+      // Clear any existing timeout
+      if (xTooltipTimeout) {
+        clearTimeout(xTooltipTimeout);
+      }
+      // Show X tooltip after 500ms delay
+      xTooltipTimeout = setTimeout(() => {
+        showTooltipFor(btn);
+      }, 500);
+    }
   }, true);
 
   root.addEventListener('mouseout', (e) => {
@@ -149,7 +174,14 @@ function attachXTooltipHandlers() {
     const to = e.relatedTarget || null;
     const leftBtn = from?.closest('.speedthreads-button[data-platform="x"]');
     const enteredBtn = to?.closest?.('.speedthreads-button[data-platform="x"]');
-    if (leftBtn && leftBtn !== enteredBtn) hideTooltip();
+    if (leftBtn && leftBtn !== enteredBtn) {
+      // Clear timeout and hide tooltip
+      if (xTooltipTimeout) {
+        clearTimeout(xTooltipTimeout);
+        xTooltipTimeout = null;
+      }
+      hideTooltip();
+    }
   }, true);
 }
 
@@ -708,6 +740,8 @@ function handleSummarizeClick(event) {
   event.stopImmediatePropagation();
   
   console.log('SpeedThreads: Summarize button clicked');
+  console.log('yooo');
+  
   // TODO: Implement scraping and API call
   alert('SpeedThreads: Summarize feature coming soon!');
   
