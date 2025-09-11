@@ -978,6 +978,150 @@ function createButton() {
   return button;
 }
 
+// Reddit Content Scraper
+function scrapeRedditContent() {
+  console.log('SpeedThreads: Starting Reddit content scraping...');
+  
+  try {
+    // Find the main post container
+    const postElement = document.querySelector('shreddit-post') || 
+                       document.querySelector('article[data-testid="post-container"]') ||
+                       document.querySelector('article');
+    
+    if (!postElement) {
+      console.error('SpeedThreads: Could not find Reddit post container');
+      return null;
+    }
+
+    // Extract post content
+    const postData = extractRedditPost(postElement);
+    
+    // Extract replies/comments
+    const replies = extractRedditReplies();
+    
+    const threadData = {
+      platform: 'reddit',
+      post: postData,
+      replies: replies
+    };
+    
+    console.log('SpeedThreads: Reddit content scraped successfully:', threadData);
+    return threadData;
+    
+  } catch (error) {
+    console.error('SpeedThreads: Error scraping Reddit content:', error);
+    return null;
+  }
+}
+
+// Simplified scraper - no upvotes or type detection
+
+// Extract main Reddit post data
+function extractRedditPost(postElement) {
+  const post = {
+    title: '',
+    text: '',
+    author: '',
+    url: window.location.href
+  };
+
+  console.log('SpeedThreads: Extracting post data...');
+
+  // Extract title
+  const titleElement = postElement.querySelector('[data-testid="post-content"] h1') ||
+                      postElement.querySelector('h1[slot="title"]') ||
+                      postElement.querySelector('h1') ||
+                      postElement.querySelector('[slot="title"]');
+  
+  if (titleElement) {
+    post.title = titleElement.textContent?.trim() || '';
+  }
+
+  // Extract post text content
+  const textElement = postElement.querySelector('[data-testid="post-content"] [slot="text-body"]') ||
+                     postElement.querySelector('[slot="text-body"]') ||
+                     postElement.querySelector('[data-testid="post-content"] p') ||
+                     postElement.querySelector('.post-content') ||
+                     postElement.querySelector('[data-click-id="text-body"]');
+  
+  if (textElement) {
+    post.text = textElement.textContent?.trim() || '';
+  }
+
+  // Skip author extraction - not needed
+  post.author = '';
+
+  console.log(`SpeedThreads: Post title: "${post.title}"`);
+  console.log(`SpeedThreads: Post text: "${post.text.substring(0, 100)}..."`);
+
+  return post;
+}
+
+// Extract Reddit replies/comments
+function extractRedditReplies() {
+  const replies = [];
+  
+  console.log('SpeedThreads: Extracting comments...');
+  
+  // Try multiple selectors for comments
+  const commentSelectors = [
+    'div[data-testid="comment"]',
+    'shreddit-comment',
+    '[data-testid="comment"]',
+    '.Comment',
+    '[data-click-id="comment"]'
+  ];
+  
+  let commentElements = [];
+  
+  for (const selector of commentSelectors) {
+    commentElements = document.querySelectorAll(selector);
+    if (commentElements.length > 0) {
+      console.log(`SpeedThreads: Found ${commentElements.length} comments using selector: ${selector}`);
+      break;
+    }
+  }
+  
+  if (commentElements.length === 0) {
+    console.log('SpeedThreads: No comments found with any selector');
+    return replies;
+  }
+
+  // Process each comment (limit to first 20 for performance)
+  const maxComments = Math.min(commentElements.length, 20);
+  
+  for (let i = 0; i < maxComments; i++) {
+    const commentElement = commentElements[i];
+    const reply = extractRedditComment(commentElement);
+    
+    if (reply && reply.text.trim()) {
+      replies.push(reply);
+    }
+  }
+  
+  console.log(`SpeedThreads: Extracted ${replies.length} replies`);
+  return replies;
+}
+
+// Extract individual Reddit comment
+function extractRedditComment(commentElement) {
+  const reply = {
+    text: '',
+    author: ''
+  };
+
+  // Extract comment text using the correct selector
+  const textElement = commentElement.querySelector('p');
+  if (textElement) {
+    reply.text = textElement.textContent?.trim() || '';
+  }
+
+  // Skip author extraction - not needed
+  reply.author = '';
+
+  return reply;
+}
+
 // Handle summarize button click
 function handleSummarizeClick(event) {
   // Prevent event from bubbling up to parent elements
@@ -986,13 +1130,34 @@ function handleSummarizeClick(event) {
   event.stopImmediatePropagation();
   
   console.log('SpeedThreads: Summarize button clicked');
-  console.log('yooo');
   
   // Show chatbot when button is clicked
   if (!chatbot) {
     chatbot = new SpeedThreadsChatbot();
   }
   chatbot.toggle();
+  
+  // Scrape Reddit content and send to chatbot
+  if (getPlatform() === 'reddit') {
+    const threadData = scrapeRedditContent();
+    if (threadData) {
+      // Log scraped data in AI-optimized format
+      console.log('=== REDDIT THREAD DATA ===');
+      console.log(`TITLE: ${threadData.post.title}`);
+      console.log(`POST: ${threadData.post.text}`);
+      console.log('COMMENTS:');
+      threadData.replies.forEach((reply, index) => {
+        console.log(`${index + 1}. ${reply.text}`);
+      });
+      console.log('=== END THREAD DATA ===');
+      
+      // Send the scraped data to the chatbot
+      chatbot.addMessage('user', `Please summarize this Reddit thread: ${threadData.post.title || 'Untitled Post'}`);
+      chatbot.addMessage('ai', `I've scraped the thread data. Here's what I found:\n\n**Post:** ${threadData.post.title}\n**Replies:** ${threadData.replies.length} comments\n\n*Check the console for detailed scraped data!*`);
+    } else {
+      chatbot.addMessage('ai', 'Sorry, I couldn\'t scrape the Reddit content. Please try again.');
+    }
+  }
   
   // Return false to prevent any default behavior
   return false;
