@@ -238,6 +238,7 @@ class SpeedThreadsChatbot {
     const chatbot = document.createElement('div');
     chatbot.id = CONFIG.CHATBOT_ID;
     chatbot.className = 'speedthreads-chatbot';
+    chatbot.setAttribute('data-platform', getPlatform());
     
     // Create toggle button
     const toggleButton = document.createElement('button');
@@ -303,6 +304,18 @@ class SpeedThreadsChatbot {
 
 
   toggle() {
+    // Check if the SpeedThreads button is visible before showing popup
+    const button = document.getElementById(CONFIG.BUTTON_ID);
+    if (!button || !button.isConnected || button.offsetParent === null) {
+      console.log('SpeedThreads: Button not visible, hiding popup');
+      this.isOpen = false;
+      const chatbot = document.getElementById(CONFIG.CHATBOT_ID);
+      if (chatbot) {
+        chatbot.classList.remove('open');
+      }
+      return;
+    }
+
     this.isOpen = !this.isOpen;
     const chatbot = document.getElementById(CONFIG.CHATBOT_ID);
     if (chatbot) {
@@ -400,6 +413,23 @@ class SpeedThreadsChatbot {
 
 // Initialize chatbot
 let chatbot = null;
+
+// Function to check if button is visible and hide popup if not
+function checkButtonVisibility() {
+  const button = document.getElementById(CONFIG.BUTTON_ID);
+  const chatbotEl = document.getElementById(CONFIG.CHATBOT_ID);
+  
+  if (!button || !button.isConnected || button.offsetParent === null) {
+    // Button is not visible, hide popup if it's open
+    if (chatbotEl && chatbotEl.classList.contains('open')) {
+      console.log('SpeedThreads: Button not visible, hiding popup');
+      chatbotEl.classList.remove('open');
+      if (chatbot) {
+        chatbot.isOpen = false;
+      }
+    }
+  }
+}
 
 // Check if we're on a supported page
 function isSupportedPage() {
@@ -704,6 +734,9 @@ function initializeInjection() {
       console.log('SpeedThreads: Periodic re-injection attempt');
       injectButton();
     }
+    
+    // Check button visibility and hide popup if needed
+    checkButtonVisibility();
   }, 5000);
   
   // Also check on page visibility change (for SPA navigation)
@@ -715,6 +748,9 @@ function initializeInjection() {
           console.log('SpeedThreads: Re-injection on visibility change');
           injectButton();
         }
+        
+        // Check button visibility and hide popup if needed
+        checkButtonVisibility();
       }, 1000);
     }
   });
@@ -759,6 +795,9 @@ function initializeInjection() {
         console.log('SpeedThreads: Post page - button missing, re-injecting');
         injectButton();
       }
+      
+      // Check button visibility and hide popup if needed
+      checkButtonVisibility();
     }, 1000); // Check every 1 second on post pages
     
     // Additional safety net for post page refreshes
