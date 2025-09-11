@@ -377,6 +377,20 @@ class SpeedThreadsChatbot {
         this.handleSendMessage();
       }
     });
+
+    // Prevent scroll propagation from chatbot to page
+    document.addEventListener('wheel', (e) => {
+      if (e.target.closest('.speedthreads-chatbot-messages')) {
+        e.stopPropagation();
+      }
+    }, { passive: false });
+
+    // Prevent scroll propagation from chatbot to page
+    document.addEventListener('scroll', (e) => {
+      if (e.target.closest('.speedthreads-chatbot-messages')) {
+        e.stopPropagation();
+      }
+    }, { passive: false });
   }
 
   handleSendMessage() {
