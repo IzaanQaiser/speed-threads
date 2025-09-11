@@ -293,9 +293,6 @@ class SpeedThreadsChatbot {
         <div class="speedthreads-chatbot-message-content">
           ${message.content.replace(/\n/g, '<br>')}
         </div>
-        <div class="speedthreads-chatbot-message-time">
-          ${this.formatTime(message.timestamp)}
-        </div>
       `;
       messagesContainer.appendChild(messageEl);
     });
@@ -304,19 +301,6 @@ class SpeedThreadsChatbot {
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
   }
 
-  formatTime(timestamp) {
-    const now = new Date();
-    const diff = now - timestamp;
-    const minutes = Math.floor(diff / 60000);
-    
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
-    
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    
-    return timestamp.toLocaleDateString();
-  }
 
   toggle() {
     this.isOpen = !this.isOpen;
