@@ -22,7 +22,8 @@ const CONFIG = {
   REDDIT_PATTERN: /reddit\.com\/r\/[^\/]+\/comments\/[^\/]+/,
   X_PATTERN: /x\.com\/[^\/]+\/status\/\d+/,
   BUTTON_ID: 'speedthreads-summarize-btn',
-  MODAL_ID: 'speedthreads-modal'
+  MODAL_ID: 'speedthreads-modal',
+  CHATBOT_ID: 'speedthreads-chatbot'
 };
 
 // Portal and tooltip system for X platform only
@@ -193,6 +194,213 @@ function attachTooltipHandlers() {
 
 // Ensure handlers are active
 attachTooltipHandlers();
+
+// Chatbot System
+class SpeedThreadsChatbot {
+  constructor() {
+    this.isOpen = false;
+    this.messages = [
+      {
+        id: 1,
+        type: 'ai',
+        content: 'Hi! I\'m SpeedThreads AI. I can help you summarize and understand complex discussions on Reddit and X.',
+        timestamp: new Date(Date.now() - 300000) // 5 minutes ago
+      },
+      {
+        id: 2,
+        type: 'user',
+        content: 'Can you summarize this Reddit thread for me?',
+        timestamp: new Date(Date.now() - 240000) // 4 minutes ago
+      },
+      {
+        id: 3,
+        type: 'ai',
+        content: 'Of course! I\'ve analyzed the thread and here\'s a summary:\n\n**Main Topic:** Discussion about the latest tech trends\n**Key Points:**\n• User A shared insights about AI developments\n• User B raised concerns about privacy\n• Community consensus on responsible AI use\n\n**TL;DR:** A thoughtful discussion on balancing AI innovation with ethical considerations.',
+        timestamp: new Date(Date.now() - 180000) // 3 minutes ago
+      },
+      {
+        id: 4,
+        type: 'user',
+        content: 'That\'s really helpful! Can you also suggest a good reply?',
+        timestamp: new Date(Date.now() - 120000) // 2 minutes ago
+      }
+    ];
+    this.init();
+  }
+
+  init() {
+    this.createChatbot();
+    this.attachEventListeners();
+  }
+
+  createChatbot() {
+    // Create chatbot container
+    const chatbot = document.createElement('div');
+    chatbot.id = CONFIG.CHATBOT_ID;
+    chatbot.className = 'speedthreads-chatbot';
+    
+    // Create toggle button
+    const toggleButton = document.createElement('button');
+    toggleButton.className = 'speedthreads-chatbot-toggle';
+    toggleButton.innerHTML = `
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
+    
+    // Create chat window
+    const chatWindow = document.createElement('div');
+    chatWindow.className = 'speedthreads-chatbot-window';
+    chatWindow.innerHTML = `
+      <div class="speedthreads-chatbot-header">
+        <div class="speedthreads-chatbot-title">
+          <div class="speedthreads-chatbot-avatar">🤖</div>
+          <div>
+            <h3>SpeedThreads AI</h3>
+            <span class="speedthreads-chatbot-status">Online</span>
+          </div>
+        </div>
+        <button class="speedthreads-chatbot-close">×</button>
+      </div>
+      <div class="speedthreads-chatbot-messages"></div>
+      <div class="speedthreads-chatbot-input-container">
+        <input type="text" class="speedthreads-chatbot-input" placeholder="Type your message...">
+        <button class="speedthreads-chatbot-send">Send</button>
+      </div>
+    `;
+    
+    chatbot.appendChild(toggleButton);
+    chatbot.appendChild(chatWindow);
+    
+    // Add to portal
+    const portal = ensurePortal();
+    portal.appendChild(chatbot);
+    
+    // Render messages
+    this.renderMessages();
+  }
+
+  renderMessages() {
+    const messagesContainer = document.querySelector('.speedthreads-chatbot-messages');
+    if (!messagesContainer) return;
+    
+    messagesContainer.innerHTML = '';
+    
+    this.messages.forEach(message => {
+      const messageEl = document.createElement('div');
+      messageEl.className = `speedthreads-chatbot-message ${message.type}`;
+      messageEl.innerHTML = `
+        <div class="speedthreads-chatbot-message-content">
+          ${message.content.replace(/\n/g, '<br>')}
+        </div>
+        <div class="speedthreads-chatbot-message-time">
+          ${this.formatTime(message.timestamp)}
+        </div>
+      `;
+      messagesContainer.appendChild(messageEl);
+    });
+    
+    // Scroll to bottom
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  formatTime(timestamp) {
+    const now = new Date();
+    const diff = now - timestamp;
+    const minutes = Math.floor(diff / 60000);
+    
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    
+    return timestamp.toLocaleDateString();
+  }
+
+  toggle() {
+    this.isOpen = !this.isOpen;
+    const chatbot = document.getElementById(CONFIG.CHATBOT_ID);
+    if (chatbot) {
+      chatbot.classList.toggle('open', this.isOpen);
+    }
+  }
+
+  addMessage(content, type = 'user') {
+    const newMessage = {
+      id: Date.now(),
+      type,
+      content,
+      timestamp: new Date()
+    };
+    
+    this.messages.push(newMessage);
+    this.renderMessages();
+  }
+
+  attachEventListeners() {
+    // Toggle button
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.speedthreads-chatbot-toggle')) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.toggle();
+      }
+    });
+
+    // Close button
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.speedthreads-chatbot-close')) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.isOpen = false;
+        const chatbot = document.getElementById(CONFIG.CHATBOT_ID);
+        if (chatbot) {
+          chatbot.classList.remove('open');
+        }
+      }
+    });
+
+    // Send button and Enter key
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.speedthreads-chatbot-send')) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.handleSendMessage();
+      }
+    });
+
+    document.addEventListener('keypress', (e) => {
+      if (e.target.closest('.speedthreads-chatbot-input') && e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        this.handleSendMessage();
+      }
+    });
+  }
+
+  handleSendMessage() {
+    const input = document.querySelector('.speedthreads-chatbot-input');
+    if (!input) return;
+    
+    const message = input.value.trim();
+    if (!message) return;
+    
+    // Add user message
+    this.addMessage(message, 'user');
+    
+    // Clear input
+    input.value = '';
+    
+    // Simulate AI response (for demo)
+    setTimeout(() => {
+      this.addMessage('Thanks for your message! I\'m here to help with thread summaries and analysis.', 'ai');
+    }, 1000);
+  }
+}
+
+// Initialize chatbot
+let chatbot = null;
 
 // Check if we're on a supported page
 function isSupportedPage() {
@@ -742,8 +950,11 @@ function handleSummarizeClick(event) {
   console.log('SpeedThreads: Summarize button clicked');
   console.log('yooo');
   
-  // TODO: Implement scraping and API call
-  alert('SpeedThreads: Summarize feature coming soon!');
+  // Show chatbot when button is clicked
+  if (!chatbot) {
+    chatbot = new SpeedThreadsChatbot();
+  }
+  chatbot.toggle();
   
   // Return false to prevent any default behavior
   return false;
