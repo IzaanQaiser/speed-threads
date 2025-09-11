@@ -254,18 +254,18 @@ class SpeedThreadsChatbot {
     chatWindow.innerHTML = `
       <div class="speedthreads-chatbot-header">
         <div class="speedthreads-chatbot-title">
-          <div class="speedthreads-chatbot-avatar">🤖</div>
-          <div>
-            <h3>SpeedThreads AI</h3>
-            <span class="speedthreads-chatbot-status">Online</span>
-          </div>
+          <span>speedthreads</span>
         </div>
-        <button class="speedthreads-chatbot-close">×</button>
+        <div class="speedthreads-chatbot-actions">
+          <button class="speedthreads-chatbot-close">×</button>
+        </div>
       </div>
-      <div class="speedthreads-chatbot-messages"></div>
-      <div class="speedthreads-chatbot-input-container">
-        <input type="text" class="speedthreads-chatbot-input" placeholder="Type your message...">
-        <button class="speedthreads-chatbot-send">Send</button>
+      <div class="speedthreads-chatbot-content">
+        <div class="speedthreads-chatbot-messages"></div>
+        <div class="speedthreads-chatbot-input-container">
+          <input type="text" class="speedthreads-chatbot-input" placeholder="Ask about this thread...">
+          <button class="speedthreads-chatbot-send">Send</button>
+        </div>
       </div>
     `;
     
@@ -297,7 +297,7 @@ class SpeedThreadsChatbot {
       messagesContainer.appendChild(messageEl);
     });
     
-    // Scroll to bottom
+    // Scroll to bottom for vertical layout
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
   }
 
@@ -344,6 +344,7 @@ class SpeedThreadsChatbot {
         }
       }
     });
+
 
     // Send button and Enter key
     document.addEventListener('click', (e) => {
