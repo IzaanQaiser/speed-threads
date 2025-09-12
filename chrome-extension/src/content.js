@@ -252,6 +252,19 @@ class SpeedThreadsChatbot {
       </div>
     `;
     
+    // Add scroll event handling to messages container
+    const messagesContainer = chatWindow.querySelector('.speedthreads-chatbot-messages');
+    if (messagesContainer) {
+      messagesContainer.addEventListener('wheel', (e) => {
+        e.stopPropagation();
+        // Allow normal scrolling within the messages container
+      }, { passive: true });
+      
+      messagesContainer.addEventListener('scroll', (e) => {
+        e.stopPropagation();
+      }, { passive: true });
+    }
+    
     chatbot.appendChild(toggleButton);
     chatbot.appendChild(chatWindow);
     
@@ -366,14 +379,24 @@ class SpeedThreadsChatbot {
 
     // Prevent scroll propagation from chatbot to page
     document.addEventListener('wheel', (e) => {
-      if (e.target.closest('.speedthreads-chatbot-messages')) {
+      if (e.target.closest('.speedthreads-chatbot')) {
+        e.preventDefault();
         e.stopPropagation();
       }
     }, { passive: false });
 
     // Prevent scroll propagation from chatbot to page
     document.addEventListener('scroll', (e) => {
-      if (e.target.closest('.speedthreads-chatbot-messages')) {
+      if (e.target.closest('.speedthreads-chatbot')) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }, { passive: false });
+
+    // Additional scroll prevention for touch events
+    document.addEventListener('touchmove', (e) => {
+      if (e.target.closest('.speedthreads-chatbot')) {
+        e.preventDefault();
         e.stopPropagation();
       }
     }, { passive: false });

@@ -6,3 +6,4 @@
 5. cant scrape upvotes
 6. animate spreadsheets window popup
 7. conversation history should be specific to the post that is being analysed
+8. function not defined error in chrome extension page
