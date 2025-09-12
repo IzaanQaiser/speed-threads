@@ -15,3 +15,4 @@
 **st-14:** make analysis report colour gray <br>
 **st-15:** make analysis announcement glow smooth <br>
 **st-16:** add sliding highlight to analysis announcement <br>
+**st-17:** add colourful highlight to speedthreads name and to timing report <br>
