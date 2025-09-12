@@ -321,7 +321,11 @@ class SpeedThreadsChatbot {
             </div>
           `;
         } else {
+          const elapsedTimeHtml = message.elapsedTime ? 
+            `<div class="speedthreads-elapsed-time">Analysis completed in ${message.elapsedTime}</div>` : '';
+          
           messageEl.innerHTML = `
+            ${elapsedTimeHtml}
             <div class="speedthreads-chatbot-message-content">
               ${this.formatMessageContent(message.content)}
             </div>
@@ -374,14 +378,15 @@ class SpeedThreadsChatbot {
     }
   }
 
-  addMessage(content, type = 'user', id = null, isThinking = false, hasRetry = false) {
+  addMessage(content, type = 'user', id = null, isThinking = false, hasRetry = false, elapsedTime = null) {
     const newMessage = {
       id: id || Date.now(),
       type,
       content,
       timestamp: new Date(),
       isThinking,
-      hasRetry
+      hasRetry,
+      elapsedTime
     };
     
     this.messages.push(newMessage);
@@ -403,19 +408,20 @@ class SpeedThreadsChatbot {
       // Start timer
       this.startTime = Date.now();
       if (timerElement) {
-        timerElement.textContent = '00:00';
+        timerElement.textContent = '00:00:0';
       }
       
-      // Update timer every second
+      // Update timer every 100ms for smooth millisecond display
       this.timerInterval = setInterval(() => {
         if (this.startTime && timerElement) {
           const elapsed = Date.now() - this.startTime;
+          const milliseconds = Math.floor((elapsed % 1000) / 100);
           const seconds = Math.floor(elapsed / 1000) % 60;
           const minutes = Math.floor(elapsed / (1000 * 60));
-          const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+          const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${milliseconds}`;
           timerElement.textContent = formattedTime;
         }
-      }, 1000);
+      }, 100);
     }
   }
 
@@ -1480,6 +1486,8 @@ function handleSummarizeClick(event) {
 
 // Analyze thread with backend
 async function analyzeThread(threadData) {
+  const startTime = Date.now();
+  
   try {
     // Show analyzing overlay
     chatbot.showAnalyzing();
@@ -1500,6 +1508,13 @@ async function analyzeThread(threadData) {
     
     // Hide analyzing overlay
     chatbot.hideAnalyzing();
+    
+    // Calculate elapsed time
+    const elapsedTime = Date.now() - startTime;
+    const milliseconds = elapsedTime % 1000;
+    const seconds = Math.floor(elapsedTime / 1000) % 60;
+    const minutes = Math.floor(elapsedTime / (1000 * 60));
+    const formattedElapsedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${milliseconds.toString().padStart(3, '0')}`;
     
     // Format analysis for display
     let analysisText = `**${analysis.type.toUpperCase()}**\n\n`;
@@ -1522,7 +1537,7 @@ async function analyzeThread(threadData) {
       analysisText += `\n\n**Insights:** ${analysis.insights}`;
     }
     
-    chatbot.addMessage(analysisText, 'ai');
+    chatbot.addMessage(analysisText, 'ai', null, false, false, formattedElapsedTime);
     
   } catch (error) {
     console.error('Analysis error:', error);
