@@ -288,7 +288,7 @@ class SpeedThreadsChatbot {
       messageEl.setAttribute('data-message-id', message.id);
       messageEl.innerHTML = `
         <div class="speedthreads-chatbot-message-content">
-          ${message.content.replace(/\n/g, '<br>')}
+          ${this.formatMessageContent(message.content)}
         </div>
       `;
       messagesContainer.appendChild(messageEl);
@@ -296,6 +296,23 @@ class SpeedThreadsChatbot {
     
     // Scroll to bottom for vertical layout
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  formatMessageContent(content) {
+    // Convert markdown-style formatting to HTML
+    let formatted = content
+      // Convert **bold** to <strong>bold</strong>
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      // Convert *italic* to <em>italic</em>
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      // Convert line breaks
+      .replace(/\n/g, '<br>')
+      // Convert bullet points
+      .replace(/^• /gm, '• ')
+      // Convert numbered lists
+      .replace(/^\d+\. /gm, (match) => match);
+    
+    return formatted;
   }
 
 

@@ -386,6 +386,21 @@
   white-space: normal;
 }
 
+/* Formatting styles for message content */
+.speedthreads-chatbot-message-content strong {
+  font-weight: 600;
+  color: inherit;
+}
+
+.speedthreads-chatbot-message-content em {
+  font-style: italic;
+  color: inherit;
+}
+
+.speedthreads-chatbot-message-content br {
+  line-height: 1.6;
+}
+
 .speedthreads-chatbot-message.user .speedthreads-chatbot-message-content {
   background: rgba(100, 120, 200, 0.15);
   backdrop-filter: blur(20px) saturate(180%) brightness(1.2) contrast(1.1);
