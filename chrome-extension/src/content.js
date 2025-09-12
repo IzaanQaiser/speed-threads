@@ -409,12 +409,74 @@ class SpeedThreadsChatbot {
     };
     
     this.messages.push(newMessage);
-    this.renderMessages();
+    this.addMessageToDOM(newMessage);
+  }
+
+  addMessageToDOM(message) {
+    const messagesContainer = document.querySelector('.speedthreads-chatbot-messages');
+    if (!messagesContainer) return;
+    
+    const messageEl = document.createElement('div');
+    messageEl.className = `speedthreads-chatbot-message ${message.type} animate-in`;
+    messageEl.setAttribute('data-message-id', message.id);
+    
+    if (message.isThinking) {
+      messageEl.innerHTML = `
+        <div class="speedthreads-chatbot-message-content thinking-message">
+          <div class="thinking-animation">
+            <div class="thinking-dots">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+          <span class="thinking-text">${message.content}</span>
+        </div>
+      `;
+    } else {
+      if (message.hasRetry) {
+        messageEl.innerHTML = `
+          <div class="speedthreads-chatbot-message-content">
+            ${this.formatMessageContent(message.content)}
+          </div>
+          <div class="speedthreads-retry-container">
+            <button class="speedthreads-retry-button" data-message-id="${message.id}">
+              🔄 Retry Analysis
+            </button>
+          </div>
+        `;
+      } else {
+        const elapsedTimeHtml = message.elapsedTime ? 
+          `<div class="speedthreads-elapsed-time">Analysis completed in ${message.elapsedTime}</div>` : '';
+        
+        messageEl.innerHTML = `
+          ${elapsedTimeHtml}
+          <div class="speedthreads-chatbot-message-content">
+            ${this.formatMessageContent(message.content)}
+          </div>
+        `;
+      }
+    }
+    
+    messagesContainer.appendChild(messageEl);
+    
+    // Remove animation class after animation completes
+    setTimeout(() => {
+      messageEl.classList.remove('animate-in');
+    }, 300); // Match the animation duration
+    
+    // Scroll to bottom for vertical layout
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
   }
 
   removeMessage(id) {
     this.messages = this.messages.filter(msg => msg.id !== id);
-    this.renderMessages();
+    
+    // Remove the specific message from DOM
+    const messageEl = document.querySelector(`[data-message-id="${id}"]`);
+    if (messageEl) {
+      messageEl.remove();
+    }
   }
 
   showAnalyzing() {
