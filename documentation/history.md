@@ -8,3 +8,4 @@ st-5: chatbot messaging flow + structure <br>
 st-6: animate analysis message and show total time spent analyzing + workflow error handling <br>
 st-7: add logging in backend console to keep track of backend issue causes <br>
 st-8: add elapsed time indication at the top of the chat window + add milleseconds <br>
+st-9: add animations to chat window popup initialisation
