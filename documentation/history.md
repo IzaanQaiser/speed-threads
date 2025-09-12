@@ -10,4 +10,5 @@ what each branch did
 **st-8:** add elapsed time indication at the top of the chat window + add milleseconds <br>
 **st-9:** add animations to chat window popup initialisation <br>
 **st-10:** left align text input with messages <br>
-**st-11:** message window refreshing when a new message is sent/recieved
+**st-11:** message window refreshing when a new message is sent/recieved <br>
+**st-12:** 

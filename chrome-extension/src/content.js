@@ -301,13 +301,7 @@ class SpeedThreadsChatbot {
       if (message.isThinking) {
         messageEl.innerHTML = `
           <div class="speedthreads-chatbot-message-content thinking-message">
-            <div class="thinking-animation">
-              <div class="thinking-dots">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-            </div>
+            <div class="thinking-spinner"></div>
             <span class="thinking-text">${message.content}</span>
           </div>
         `;
@@ -423,13 +417,7 @@ class SpeedThreadsChatbot {
     if (message.isThinking) {
       messageEl.innerHTML = `
         <div class="speedthreads-chatbot-message-content thinking-message">
-          <div class="thinking-animation">
-            <div class="thinking-dots">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-          </div>
+          <div class="thinking-spinner"></div>
           <span class="thinking-text">${message.content}</span>
         </div>
       `;
@@ -638,7 +626,7 @@ class SpeedThreadsChatbot {
     
     // Show loading message
     const loadingId = Date.now();
-    this.addMessage('Thinking...', 'ai', loadingId);
+    this.addMessage('Thinking', 'ai', loadingId, true);
     
     try {
       // Get current thread data

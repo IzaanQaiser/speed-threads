@@ -12,9 +12,9 @@
 
 
 ### things to do
-1. make live elapsed timer move up
+1. make live elapsed timer move up + make time elaped in analysing announcement white
 2. smooth scrolling
 3. add glow to messages
 4. add pulsating glow to analyzing announcement 
 5. if there is no need for a scrollbar within, you can scroll on the outside
-6. animate the thinking
+6. add highlight sliding on Analyzing message
