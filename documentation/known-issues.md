@@ -8,3 +8,10 @@
 7. conversation history should be specific to the post that is being analysed
 8. function not defined error in chrome extension page
 9. show scrollbar anytime we scroll, dont hide when scroll is exhausted
+
+
+### things to do
+1. make live elapsed timer move up
+2. make text input be left aligned with messages
+3. add glow to messages
+4. add pulsating glow to analyzing announcement 
