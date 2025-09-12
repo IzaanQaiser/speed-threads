@@ -12,3 +12,4 @@ what each branch did
 **st-10:** left align text input with messages <br>
 **st-11:** message window refreshing when a new message is sent/recieved <br>
 **st-12:** make the elapsed timer white <br>
+**st-13:** make analysis report colour gray <br>
