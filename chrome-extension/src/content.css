@@ -288,7 +288,18 @@
 .speedthreads-chatbot-title span {
   font-size: 16px;
   font-weight: 600;
-  color: white;
+  background: linear-gradient(135deg, 
+    #7c9eff 0%, 
+    #a78bfa 25%, 
+    #f093fb 50%, 
+    #f5576c 75%, 
+    #4facfe 100%);
+  background-size: 300% 300%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift 6s ease-in-out infinite;
+  color: white; /* Fallback for browsers that don't support background-clip */
 }
 
 .speedthreads-chatbot-actions {
@@ -517,6 +528,18 @@
   }
 }
 
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 /* Analyzing overlay styles */
 .speedthreads-analyzing-overlay {
   position: absolute;
@@ -606,18 +629,33 @@
   border-radius: 8px;
   font-size: 16px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   letter-spacing: 1px;
   opacity: 1;
   width: 100%;
   box-sizing: border-box;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .speedthreads-elapsed-time::before {
   content: "⏱️";
   margin-right: 8px;
   font-size: 16px;
+}
+
+.speedthreads-time-gradient {
+  background: linear-gradient(135deg, 
+    #7c9eff 0%, 
+    #a78bfa 25%, 
+    #f093fb 50%, 
+    #f5576c 75%, 
+    #4facfe 100%);
+  background-size: 300% 300%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift 6s ease-in-out infinite;
+  color: rgba(255, 255, 255, 0.9); /* Fallback for browsers that don't support background-clip */
 }
 
 /* Retry button styles */

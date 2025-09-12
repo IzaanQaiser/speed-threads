@@ -319,7 +319,7 @@ class SpeedThreadsChatbot {
           `;
         } else {
           const elapsedTimeHtml = message.elapsedTime ? 
-            `<div class="speedthreads-elapsed-time">Analysis completed in ${message.elapsedTime}</div>` : '';
+            `<div class="speedthreads-elapsed-time">Analysis completed in&nbsp;<span class="speedthreads-time-gradient">${message.elapsedTime}</span></div>` : '';
           
           messageEl.innerHTML = `
             ${elapsedTimeHtml}
@@ -435,7 +435,7 @@ class SpeedThreadsChatbot {
         `;
       } else {
         const elapsedTimeHtml = message.elapsedTime ? 
-          `<div class="speedthreads-elapsed-time">Analysis completed in ${message.elapsedTime}</div>` : '';
+          `<div class="speedthreads-elapsed-time">Analysis completed in&nbsp;<span class="speedthreads-time-gradient">${message.elapsedTime}</span></div>` : '';
         
         messageEl.innerHTML = `
           ${elapsedTimeHtml}
