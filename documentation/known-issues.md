@@ -12,7 +12,6 @@
 
 
 ### things to do
-- make live elapsed timer move up + make time elaped in analysing announcement white
 - smooth scrolling
 - add glow to messages
 - if there is no need for a scrollbar within, you can scroll on the outside
