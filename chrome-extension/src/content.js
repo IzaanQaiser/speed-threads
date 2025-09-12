@@ -199,14 +199,7 @@ attachTooltipHandlers();
 class SpeedThreadsChatbot {
   constructor() {
     this.isOpen = false;
-    this.messages = [
-      {
-        id: 1,
-        type: 'ai',
-        content: 'Hi! I\'m SpeedThreads AI powered by GPT-4o mini. I can help you analyze and understand this thread. Ask me anything about the post, comments, or community response!',
-        timestamp: new Date()
-      }
-    ];
+    this.messages = [];
     this.init();
   }
 
@@ -1360,7 +1353,9 @@ function handleSummarizeClick(event) {
 // Analyze thread with backend
 async function analyzeThread(threadData) {
   try {
-    chatbot.addMessage('Analyzing thread with GPT-4o mini...', 'ai');
+    // Add loading message and get its ID
+    const loadingId = Date.now();
+    chatbot.addMessage('Analyzing thread with GPT-4o mini...', 'ai', loadingId);
     
     const response = await fetch(`${API_BASE_URL}/summarize`, {
       method: 'POST',
@@ -1375,6 +1370,9 @@ async function analyzeThread(threadData) {
     }
     
     const analysis = await response.json();
+    
+    // Remove the loading message
+    chatbot.removeMessage(loadingId);
     
     // Format analysis for display
     let analysisText = `**${analysis.type.toUpperCase()}**\n\n`;
@@ -1401,6 +1399,8 @@ async function analyzeThread(threadData) {
     
   } catch (error) {
     console.error('Analysis error:', error);
+    // Remove loading message on error too
+    chatbot.removeMessage(loadingId);
     chatbot.addMessage(`Sorry, analysis failed: ${error.message}. Make sure the backend is running!`, 'ai');
   }
 }
