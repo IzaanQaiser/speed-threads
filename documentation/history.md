@@ -16,3 +16,4 @@
 **st-15:** make analysis announcement glow smooth <br>
 **st-16:** add sliding highlight to analysis announcement <br>
 **st-17:** add colourful highlight to speedthreads name and to timing report <br>
+**st-18:** add colourful highlight to live time elapsed in analysis announcement and to send button <br>
