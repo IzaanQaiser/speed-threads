@@ -367,6 +367,7 @@
   flex-direction: column;
   max-width: 75%;
   margin-right: 4px;
+  position: relative;
 }
 
 .speedthreads-chatbot-message.user {
@@ -399,6 +400,163 @@
 
 .speedthreads-chatbot-message-content br {
   line-height: 1.6;
+}
+
+/* Thinking animation styles */
+.thinking-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.thinking-animation {
+  display: flex;
+  align-items: center;
+}
+
+.thinking-dots {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.thinking-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.6);
+  animation: thinking-bounce 1.4s ease-in-out infinite both;
+}
+
+.thinking-dots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.thinking-dots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.thinking-dots span:nth-child(3) {
+  animation-delay: 0s;
+}
+
+.thinking-text {
+  color: inherit;
+  font-size: inherit;
+}
+
+@keyframes thinking-bounce {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+/* Analyzing overlay styles */
+.speedthreads-analyzing-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: 16px;
+}
+
+.speedthreads-analyzing-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+  background: rgba(68, 68, 68, 0.8);
+  backdrop-filter: blur(20px) saturate(150%) brightness(1.1) contrast(1.05);
+  -webkit-backdrop-filter: blur(20px) saturate(150%) brightness(1.1) contrast(1.05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  min-width: 280px;
+  text-align: center;
+}
+
+.speedthreads-analyzing-content .thinking-animation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.speedthreads-analyzing-content .thinking-dots span {
+  width: 8px;
+  height: 8px;
+  background-color: rgba(100, 120, 200, 0.8);
+}
+
+.analyzing-text {
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.analyzing-timer {
+  color: rgba(100, 120, 200, 0.9);
+  font-size: 16px;
+  font-weight: 600;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  letter-spacing: 1px;
+  margin-top: 8px;
+  opacity: 0.8;
+}
+
+/* Retry button styles */
+.speedthreads-retry-container {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.speedthreads-retry-button {
+  background: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: auto;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.speedthreads-retry-button:hover {
+  background: rgba(255, 255, 255, 0.35);
+  border-color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.speedthreads-retry-button:active {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .speedthreads-chatbot-message.user .speedthreads-chatbot-message-content {
