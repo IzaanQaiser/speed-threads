@@ -608,7 +608,18 @@
 }
 
 .analyzing-timer {
-  color: rgba(255, 255, 255, 0.9);
+  background: linear-gradient(135deg, 
+    #7c9eff 0%, 
+    #a78bfa 25%, 
+    #f093fb 50%, 
+    #f5576c 75%, 
+    #4facfe 100%);
+  background-size: 300% 300%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift 6s ease-in-out infinite;
+  color: rgba(255, 255, 255, 0.9); /* Fallback for browsers that don't support background-clip */
   font-size: 16px;
   font-weight: 600;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
@@ -769,7 +780,14 @@
 }
 
 .speedthreads-chatbot-send {
-  background: rgba(100, 120, 200, 0.3);
+  background: linear-gradient(135deg, 
+    #7c9eff 0%, 
+    #a78bfa 25%, 
+    #f093fb 50%, 
+    #f5576c 75%, 
+    #4facfe 100%);
+  background-size: 300% 300%;
+  animation: gradient-shift 6s ease-in-out infinite;
   color: white;
   border: 1px solid transparent;
   border-radius: 8px;
@@ -792,13 +810,27 @@
 
 .speedthreads-chatbot-send:hover {
   transform: scale(1.05);
-  background: rgba(100, 120, 200, 0.9);
+  background: linear-gradient(135deg, 
+    #7c9eff 0%, 
+    #a78bfa 25%, 
+    #f093fb 50%, 
+    #f5576c 75%, 
+    #4facfe 100%);
+  background-size: 300% 300%;
+  animation: gradient-shift 6s ease-in-out infinite;
   box-shadow: 0 6px 16px rgba(100, 120, 200, 0.5);
 }
 
 .speedthreads-chatbot-send:active {
   transform: scale(1.02);
-  background: rgba(100, 120, 200, 0.7);
+  background: linear-gradient(135deg, 
+    #7c9eff 0%, 
+    #a78bfa 25%, 
+    #f093fb 50%, 
+    #f5576c 75%, 
+    #4facfe 100%);
+  background-size: 300% 300%;
+  animation: gradient-shift 6s ease-in-out infinite;
 }
 
 /* Reddit-specific send button alignment fix */
