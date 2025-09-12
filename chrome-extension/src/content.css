@@ -508,6 +508,15 @@
   }
 }
 
+@keyframes analyzing-highlight {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 /* Analyzing overlay styles */
 .speedthreads-analyzing-overlay {
   position: absolute;
@@ -562,6 +571,17 @@
   font-size: 14px;
   font-weight: 500;
   opacity: 0.9;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0.2) 0%, 
+    rgba(255, 255, 255, 1) 50%, 
+    rgba(255, 255, 255, 0.2) 100%);
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: analyzing-highlight 2s ease-in-out infinite;
 }
 
 .analyzing-timer {
