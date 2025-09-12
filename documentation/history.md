@@ -5,4 +5,4 @@ what each branch did
 st-3: resolved overlapping scroll control on footer (text input + send) and header <br>
 st-4: chatbot output text formatting <br>
 st-5: chatbot messaging flow + structure <br>
-st-6: animate analysis message and show total time spent analyzing <br>
+st-6: animate analysis message and show total time spent analyzing + workflow error handling <br>
