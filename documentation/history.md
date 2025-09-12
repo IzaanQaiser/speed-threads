@@ -14,4 +14,4 @@ what each branch did
 **st-12:** make the elapsed timer white <br>
 **st-13:** make analysis announcement colour gray <br>
 **st-14:** make analysis report colour gray <br>
-**st-15:** 
+**st-15:** make analysis announcement glow smooth <br>
