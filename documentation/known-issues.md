@@ -9,6 +9,7 @@
 8. function not defined error in chrome extension page
 9. show scrollbar anytime we scroll, dont hide when scroll is exhausted
 10. x chat window refreshing when new messages appear
+11. decide on what to do for colour scheme (gradient highlight or simple)
 
 
 ### things to do
