@@ -31,7 +31,8 @@ Please analyze this thread and provide:
 6. **Funny**: Any humorous or entertaining comments (if any)
 7. **Insights**: Additional analysis about community response, sentiment, or patterns
 
-Respond in JSON format matching this structure:
+IMPORTANT: Respond with ONLY valid JSON. All fields must be strings or null, never arrays.
+
 {{
     "type": "question|humor|advice|discussion|rant|informative|support|other",
     "tldr": "One-line summary",
@@ -60,14 +61,17 @@ Respond in JSON format matching this structure:
             
             return SummaryResponse(**result)
             
-        except Exception as e:
-            # Return a fallback response if parsing fails
+        except json.JSONDecodeError as e:
+            # Return a fallback response if JSON parsing fails
             return SummaryResponse(
                 type="other",
                 tldr="Analysis failed - please try again",
                 summary=["Unable to process thread data"],
-                insights=f"Error: {str(e)}"
+                insights=f"JSON Error: {str(e)}"
             )
+        except Exception as e:
+            # Re-raise other exceptions so they can be handled by the API endpoint
+            raise e
     
     def chat_about_thread(self, thread_data: ThreadData, messages: list[ChatMessage], user_message: str) -> str:
         """Continue conversation about a thread"""

@@ -200,6 +200,8 @@ class SpeedThreadsChatbot {
   constructor() {
     this.isOpen = false;
     this.messages = [];
+    this.timerInterval = null;
+    this.startTime = null;
     this.init();
   }
 
@@ -243,6 +245,19 @@ class SpeedThreadsChatbot {
           <button class="speedthreads-chatbot-send">Send</button>
         </div>
       </div>
+      <div class="speedthreads-analyzing-overlay" style="display: none;">
+        <div class="speedthreads-analyzing-content">
+          <div class="thinking-animation">
+            <div class="thinking-dots">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+          <div class="analyzing-text">Analyzing thread with GPT-4o mini...</div>
+          <div class="analyzing-timer">00:00</div>
+        </div>
+      </div>
     `;
     
     // Add scroll event handling to messages container
@@ -279,11 +294,41 @@ class SpeedThreadsChatbot {
       const messageEl = document.createElement('div');
       messageEl.className = `speedthreads-chatbot-message ${message.type}`;
       messageEl.setAttribute('data-message-id', message.id);
-      messageEl.innerHTML = `
-        <div class="speedthreads-chatbot-message-content">
-          ${this.formatMessageContent(message.content)}
-        </div>
-      `;
+      
+      if (message.isThinking) {
+        messageEl.innerHTML = `
+          <div class="speedthreads-chatbot-message-content thinking-message">
+            <div class="thinking-animation">
+              <div class="thinking-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+            <span class="thinking-text">${message.content}</span>
+          </div>
+        `;
+      } else {
+        if (message.hasRetry) {
+          messageEl.innerHTML = `
+            <div class="speedthreads-chatbot-message-content">
+              ${this.formatMessageContent(message.content)}
+            </div>
+            <div class="speedthreads-retry-container">
+              <button class="speedthreads-retry-button" data-message-id="${message.id}">
+                🔄 Retry Analysis
+              </button>
+            </div>
+          `;
+        } else {
+          messageEl.innerHTML = `
+            <div class="speedthreads-chatbot-message-content">
+              ${this.formatMessageContent(message.content)}
+            </div>
+          `;
+        }
+      }
+      
       messagesContainer.appendChild(messageEl);
     });
     
@@ -329,12 +374,14 @@ class SpeedThreadsChatbot {
     }
   }
 
-  addMessage(content, type = 'user', id = null) {
+  addMessage(content, type = 'user', id = null, isThinking = false, hasRetry = false) {
     const newMessage = {
       id: id || Date.now(),
       type,
       content,
-      timestamp: new Date()
+      timestamp: new Date(),
+      isThinking,
+      hasRetry
     };
     
     this.messages.push(newMessage);
@@ -344,6 +391,77 @@ class SpeedThreadsChatbot {
   removeMessage(id) {
     this.messages = this.messages.filter(msg => msg.id !== id);
     this.renderMessages();
+  }
+
+  showAnalyzing() {
+    const overlay = document.querySelector('.speedthreads-analyzing-overlay');
+    const timerElement = document.querySelector('.analyzing-timer');
+    
+    if (overlay) {
+      overlay.style.display = 'flex';
+      
+      // Start timer
+      this.startTime = Date.now();
+      if (timerElement) {
+        timerElement.textContent = '00:00';
+      }
+      
+      // Update timer every second
+      this.timerInterval = setInterval(() => {
+        if (this.startTime && timerElement) {
+          const elapsed = Date.now() - this.startTime;
+          const seconds = Math.floor(elapsed / 1000) % 60;
+          const minutes = Math.floor(elapsed / (1000 * 60));
+          const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+          timerElement.textContent = formattedTime;
+        }
+      }, 1000);
+    }
+  }
+
+  hideAnalyzing() {
+    const overlay = document.querySelector('.speedthreads-analyzing-overlay');
+    const timerElement = document.querySelector('.analyzing-timer');
+    
+    if (overlay) {
+      overlay.style.display = 'none';
+      
+      // Clear timer
+      if (this.timerInterval) {
+        clearInterval(this.timerInterval);
+        this.timerInterval = null;
+      }
+      this.startTime = null;
+      
+      if (timerElement) {
+        timerElement.textContent = '00:00';
+      }
+    }
+  }
+
+  handleRetryAnalysis(messageId) {
+    // Remove the error message
+    this.removeMessage(messageId);
+    
+    // Get current thread data and retry
+    const platform = getPlatform();
+    let threadData;
+    
+    if (platform === 'reddit') {
+      threadData = scrapeRedditContent();
+    } else {
+      threadData = {
+        platform: 'x',
+        post: { title: '', text: 'X thread analysis not yet implemented', author: '', upvotes: 0, url: window.location.href },
+        replies: []
+      };
+    }
+    
+    if (threadData) {
+      analyzeThread(threadData);
+    } else {
+      this.addMessage('Sorry, I couldn\'t get the thread data for retry. Please try again.', 'ai');
+    }
   }
 
   attachEventListeners() {
@@ -410,6 +528,16 @@ class SpeedThreadsChatbot {
         e.stopPropagation();
       }
     }, { passive: false });
+
+    // Retry button event listener
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.speedthreads-retry-button')) {
+        e.preventDefault();
+        e.stopPropagation();
+        const messageId = parseInt(e.target.getAttribute('data-message-id'));
+        this.handleRetryAnalysis(messageId);
+      }
+    });
   }
 
   async handleSendMessage() {
@@ -1353,9 +1481,8 @@ function handleSummarizeClick(event) {
 // Analyze thread with backend
 async function analyzeThread(threadData) {
   try {
-    // Add loading message and get its ID
-    const loadingId = Date.now();
-    chatbot.addMessage('Analyzing thread with GPT-4o mini...', 'ai', loadingId);
+    // Show analyzing overlay
+    chatbot.showAnalyzing();
     
     const response = await fetch(`${API_BASE_URL}/summarize`, {
       method: 'POST',
@@ -1371,8 +1498,8 @@ async function analyzeThread(threadData) {
     
     const analysis = await response.json();
     
-    // Remove the loading message
-    chatbot.removeMessage(loadingId);
+    // Hide analyzing overlay
+    chatbot.hideAnalyzing();
     
     // Format analysis for display
     let analysisText = `**${analysis.type.toUpperCase()}**\n\n`;
@@ -1399,11 +1526,28 @@ async function analyzeThread(threadData) {
     
   } catch (error) {
     console.error('Analysis error:', error);
-    // Remove loading message on error too
-    chatbot.removeMessage(loadingId);
-    chatbot.addMessage(`Sorry, analysis failed: ${error.message}. Make sure the backend is running!`, 'ai');
+    // Hide analyzing overlay on error
+    chatbot.hideAnalyzing();
+    chatbot.addMessage(`Sorry, analysis failed: ${error.message}. Make sure the backend is running!`, 'ai', null, false, true);
   }
 }
 
+// Test function to simulate analysis failure
+window.testSpeedThreadsFailure = function() {
+  console.log('🧪 Testing retry functionality with simulated failure...');
+  
+  // Show chatbot if not already open
+  if (!chatbot) {
+    chatbot = new SpeedThreadsChatbot();
+  }
+  chatbot.toggle();
+  
+  // Simulate an error message with retry button
+  chatbot.addMessage('**OTHER**\n\n**TL;DR:** Analysis failed - please try again\n\n**Summary:**\n• Unable to process thread data\n• Simulated error for testing\n\n**Insights:** Error: Simulated failure for testing retry functionality', 'ai', null, false, true);
+  
+  console.log('✅ Simulated error message added with retry button. Click the "🔄 Retry Analysis" button to test!');
+};
+
 // Initialize when script loads
 initialize();
+
