@@ -12,6 +12,6 @@
 
 ### things to do
 1. make live elapsed timer move up
-2. make text input be left aligned with messages
+2. smooth scrolling
 3. add glow to messages
 4. add pulsating glow to analyzing announcement 

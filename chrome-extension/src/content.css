@@ -629,7 +629,7 @@
   gap: 12px;
   align-items: center;
   flex-shrink: 0;
-  padding: 8px 12px;
+  padding: 8px 12px 8px 0;
   height: 44px;
   min-height: 44px;
   width: 100%;
@@ -737,7 +737,7 @@
   }
   
   .speedthreads-chatbot-input-container {
-    padding: 6px 10px;
+    padding: 6px 10px 6px 0;
     height: 40px;
     min-height: 40px;
     gap: 10px;
@@ -783,7 +783,7 @@
   }
   
   .speedthreads-chatbot-input-container {
-    padding: 6px 8px;
+    padding: 6px 8px 6px 0;
     height: 38px;
     min-height: 38px;
     gap: 8px;
