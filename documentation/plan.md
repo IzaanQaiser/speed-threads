@@ -10,6 +10,8 @@ st-2-1: scrape reddit content (title, post, ~20 replies) [DONE]
 <br>
 3. Backend API (FastAPI) – Build a simple /summarize endpoint with request/response schemas, mock responses, and CORS enabled.
 <br>
+st
+<br>
 4. AI Integration (Ollama) – Connect a lightweight local GPT model to FastAPI, define a unified system prompt, and return structured JSON with TL;DR, summary, and highlights.
 <br>
 5. Frontend Modal UI – Create a popup modal triggered by the button, with sections for post type, TL;DR, bullet summary, and highlights (best answer, controversial, funny).

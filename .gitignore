@@ -54,3 +54,5 @@ coverage/
 # Temporary folders
 tmp/
 temp/
+
+documentation/secrets.md
