@@ -373,10 +373,15 @@
   max-width: 75%;
   margin-right: 4px;
   position: relative;
+  opacity: 1;
+  transform: translateY(0);
+  will-change: transform, opacity;
+}
+
+.speedthreads-chatbot-message.animate-in {
   opacity: 0;
   transform: translateY(10px);
   animation: messageSlideIn 0.3s ease-out forwards;
-  will-change: transform, opacity;
 }
 
 @keyframes messageSlideIn {
