@@ -290,10 +290,13 @@ class SpeedThreadsChatbot {
     
     messagesContainer.innerHTML = '';
     
-    this.messages.forEach(message => {
+    this.messages.forEach((message, index) => {
       const messageEl = document.createElement('div');
       messageEl.className = `speedthreads-chatbot-message ${message.type}`;
       messageEl.setAttribute('data-message-id', message.id);
+      
+      // Add staggered animation delay for each message
+      messageEl.style.animationDelay = `${index * 0.1}s`;
       
       if (message.isThinking) {
         messageEl.innerHTML = `
@@ -366,15 +369,31 @@ class SpeedThreadsChatbot {
       this.isOpen = false;
       const chatbot = document.getElementById(CONFIG.CHATBOT_ID);
       if (chatbot) {
-        chatbot.classList.remove('open');
+        this.closeChatbot();
       }
       return;
     }
 
-    this.isOpen = !this.isOpen;
+    if (this.isOpen) {
+      this.closeChatbot();
+    } else {
+      this.openChatbot();
+    }
+  }
+
+  openChatbot() {
+    this.isOpen = true;
     const chatbot = document.getElementById(CONFIG.CHATBOT_ID);
     if (chatbot) {
-      chatbot.classList.toggle('open', this.isOpen);
+      chatbot.classList.add('open');
+    }
+  }
+
+  closeChatbot() {
+    this.isOpen = false;
+    const chatbot = document.getElementById(CONFIG.CHATBOT_ID);
+    if (chatbot) {
+      chatbot.classList.remove('open');
     }
   }
 
@@ -485,11 +504,7 @@ class SpeedThreadsChatbot {
       if (e.target.closest('.speedthreads-chatbot-close')) {
         e.preventDefault();
         e.stopPropagation();
-        this.isOpen = false;
-        const chatbot = document.getElementById(CONFIG.CHATBOT_ID);
-        if (chatbot) {
-          chatbot.classList.remove('open');
-        }
+        this.closeChatbot();
       }
     });
 
@@ -661,9 +676,8 @@ function checkButtonVisibility() {
     // Button is not visible, hide popup if it's open
     if (chatbotEl && chatbotEl.classList.contains('open')) {
       console.log('SpeedThreads: Button not visible, hiding popup');
-      chatbotEl.classList.remove('open');
       if (chatbot) {
-        chatbot.isOpen = false;
+        chatbot.closeChatbot();
       }
     }
   }
