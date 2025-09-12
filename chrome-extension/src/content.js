@@ -203,26 +203,8 @@ class SpeedThreadsChatbot {
       {
         id: 1,
         type: 'ai',
-        content: 'Hi! I\'m SpeedThreads AI. I can help you summarize and understand complex discussions on Reddit and X.',
-        timestamp: new Date(Date.now() - 300000) // 5 minutes ago
-      },
-      {
-        id: 2,
-        type: 'user',
-        content: 'Can you summarize this Reddit thread for me?',
-        timestamp: new Date(Date.now() - 240000) // 4 minutes ago
-      },
-      {
-        id: 3,
-        type: 'ai',
-        content: 'Of course! I\'ve analyzed the thread and here\'s a summary:\n\n**Main Topic:** Discussion about the latest tech trends\n**Key Points:**\n• User A shared insights about AI developments\n• User B raised concerns about privacy\n• Community consensus on responsible AI use\n\n**TL;DR:** A thoughtful discussion on balancing AI innovation with ethical considerations.',
-        timestamp: new Date(Date.now() - 180000) // 3 minutes ago
-      },
-      {
-        id: 4,
-        type: 'user',
-        content: 'That\'s really helpful! Can you also suggest a good reply?',
-        timestamp: new Date(Date.now() - 120000) // 2 minutes ago
+        content: 'Hi! I\'m SpeedThreads AI powered by GPT-4o mini. I can help you analyze and understand this thread. Ask me anything about the post, comments, or community response!',
+        timestamp: new Date()
       }
     ];
     this.init();
@@ -290,6 +272,7 @@ class SpeedThreadsChatbot {
     this.messages.forEach(message => {
       const messageEl = document.createElement('div');
       messageEl.className = `speedthreads-chatbot-message ${message.type}`;
+      messageEl.setAttribute('data-message-id', message.id);
       messageEl.innerHTML = `
         <div class="speedthreads-chatbot-message-content">
           ${message.content.replace(/\n/g, '<br>')}
@@ -323,15 +306,20 @@ class SpeedThreadsChatbot {
     }
   }
 
-  addMessage(content, type = 'user') {
+  addMessage(content, type = 'user', id = null) {
     const newMessage = {
-      id: Date.now(),
+      id: id || Date.now(),
       type,
       content,
       timestamp: new Date()
     };
     
     this.messages.push(newMessage);
+    this.renderMessages();
+  }
+
+  removeMessage(id) {
+    this.messages = this.messages.filter(msg => msg.id !== id);
     this.renderMessages();
   }
 
@@ -391,7 +379,7 @@ class SpeedThreadsChatbot {
     }, { passive: false });
   }
 
-  handleSendMessage() {
+  async handleSendMessage() {
     const input = document.querySelector('.speedthreads-chatbot-input');
     if (!input) return;
     
@@ -404,10 +392,93 @@ class SpeedThreadsChatbot {
     // Clear input
     input.value = '';
     
-    // Simulate AI response (for demo)
-    setTimeout(() => {
-      this.addMessage('Thanks for your message! I\'m here to help with thread summaries and analysis.', 'ai');
-    }, 1000);
+    // Show loading message
+    const loadingId = Date.now();
+    this.addMessage('Thinking...', 'ai', loadingId);
+    
+    try {
+      // Get current thread data
+      const platform = getPlatform();
+      let threadData;
+      
+      if (platform === 'reddit') {
+        threadData = scrapeRedditContent();
+      } else {
+        threadData = {
+          platform: 'x',
+          post: { title: '', text: 'X thread analysis not yet implemented', author: '', upvotes: 0, url: window.location.href },
+          replies: []
+        };
+      }
+      
+      if (!threadData) {
+        this.removeMessage(loadingId);
+        this.addMessage('Sorry, I couldn\'t get the thread data. Please try again.', 'ai');
+        return;
+      }
+      
+      // Prepare chat request
+      const chatRequest = {
+        thread_data: threadData,
+        messages: this.messages.slice(0, -1).map(msg => ({ // Exclude the loading message
+          role: msg.type === 'user' ? 'user' : 'assistant',
+          content: msg.content
+        })),
+        user_message: message
+      };
+      
+      // Send to backend
+      const response = await fetch(`${API_BASE_URL}/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(chatRequest)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      // Remove loading message
+      this.removeMessage(loadingId);
+      
+      // Add AI response
+      this.addMessage(result.message, 'ai');
+      
+      // If this is the first message and we got analysis, show it
+      if (result.analysis && this.messages.length <= 3) {
+        const analysis = result.analysis;
+        let analysisText = `**${analysis.type.toUpperCase()}**\n\n`;
+        analysisText += `**TL;DR:** ${analysis.tldr}\n\n`;
+        analysisText += `**Summary:**\n`;
+        analysis.summary.forEach((point, i) => {
+          analysisText += `• ${point}\n`;
+        });
+        
+        if (analysis.best_answer) {
+          analysisText += `\n**Best Answer:** ${analysis.best_answer}`;
+        }
+        if (analysis.controversial) {
+          analysisText += `\n\n**Controversial:** ${analysis.controversial}`;
+        }
+        if (analysis.funny) {
+          analysisText += `\n\n**Funny:** ${analysis.funny}`;
+        }
+        if (analysis.insights) {
+          analysisText += `\n\n**Insights:** ${analysis.insights}`;
+        }
+        
+        this.addMessage(analysisText, 'ai');
+      }
+      
+    } catch (error) {
+      console.error('Chat error:', error);
+      this.removeMessage(loadingId);
+      this.addMessage(`Sorry, I encountered an error: ${error.message}. Make sure the backend is running!`, 'ai');
+    }
   }
 }
 
@@ -1122,6 +1193,97 @@ function extractRedditComment(commentElement) {
   return reply;
 }
 
+// Backend API configuration
+const API_BASE_URL = 'http://localhost:8000';
+
+// Test function for DevTools console
+window.testSpeedThreads = async function() {
+  console.log('🚀 Testing SpeedThreads with GPT-4o mini...');
+  
+  const platform = getPlatform();
+  if (!platform) {
+    console.error('❌ Not on a supported page (Reddit or X)');
+    return;
+  }
+  
+  console.log(`📱 Platform: ${platform}`);
+  
+  // Scrape content
+  let threadData;
+  if (platform === 'reddit') {
+    threadData = scrapeRedditContent();
+  } else {
+    console.log('⚠️ X scraping not implemented yet');
+    return;
+  }
+  
+  if (!threadData) {
+    console.error('❌ Failed to scrape thread data');
+    return;
+  }
+  
+  console.log('📊 Scraped data:', threadData);
+  
+  try {
+    // Test API connection
+    console.log('🔌 Testing API connection...');
+    const healthResponse = await fetch(`${API_BASE_URL}/health`);
+    const health = await healthResponse.json();
+    console.log('✅ API Health:', health);
+    
+    if (!health.openai_configured) {
+      console.error('❌ OpenAI not configured. Check your API key in backend/.env');
+      return;
+    }
+    
+    // Send to backend for analysis
+    console.log('🤖 Sending to GPT-4o mini for analysis...');
+    const response = await fetch(`${API_BASE_URL}/summarize`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(threadData)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const analysis = await response.json();
+    console.log('🎉 Analysis complete!', analysis);
+    
+    // Display in a nice format
+    console.log('\n📋 SPEEDTHREADS ANALYSIS:');
+    console.log(`📌 Type: ${analysis.type}`);
+    console.log(`⚡ TL;DR: ${analysis.tldr}`);
+    console.log('📝 Summary:');
+    analysis.summary.forEach((point, i) => {
+      console.log(`   ${i + 1}. ${point}`);
+    });
+    
+    if (analysis.best_answer) {
+      console.log(`💡 Best Answer: ${analysis.best_answer}`);
+    }
+    if (analysis.controversial) {
+      console.log(`🔥 Controversial: ${analysis.controversial}`);
+    }
+    if (analysis.funny) {
+      console.log(`😄 Funny: ${analysis.funny}`);
+    }
+    if (analysis.insights) {
+      console.log(`🧠 Insights: ${analysis.insights}`);
+    }
+    
+    return analysis;
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    console.log('💡 Make sure the backend is running: cd backend && uvicorn src.main:app --reload');
+    return null;
+  }
+};
+
 // Handle summarize button click
 function handleSummarizeClick(event) {
   // Prevent event from bubbling up to parent elements
@@ -1137,30 +1299,70 @@ function handleSummarizeClick(event) {
   }
   chatbot.toggle();
   
-  // Scrape Reddit content and send to chatbot
-  if (getPlatform() === 'reddit') {
+  // Scrape content and send to backend
+  const platform = getPlatform();
+  if (platform === 'reddit') {
     const threadData = scrapeRedditContent();
     if (threadData) {
-      // Log scraped data in AI-optimized format
-      console.log('=== REDDIT THREAD DATA ===');
-      console.log(`TITLE: ${threadData.post.title}`);
-      console.log(`POST: ${threadData.post.text}`);
-      console.log('COMMENTS:');
-      threadData.replies.forEach((reply, index) => {
-        console.log(`${index + 1}. ${reply.text}`);
-      });
-      console.log('=== END THREAD DATA ===');
-      
-      // Send the scraped data to the chatbot
-      chatbot.addMessage('user', `Please summarize this Reddit thread: ${threadData.post.title || 'Untitled Post'}`);
-      chatbot.addMessage('ai', `I've scraped the thread data. Here's what I found:\n\n**Post:** ${threadData.post.title}\n**Replies:** ${threadData.replies.length} comments\n\n*Check the console for detailed scraped data!*`);
+      // Send to backend for analysis
+      analyzeThread(threadData);
     } else {
-      chatbot.addMessage('ai', 'Sorry, I couldn\'t scrape the Reddit content. Please try again.');
+      chatbot.addMessage('Sorry, I couldn\'t scrape the Reddit content. Please try again.', 'ai');
     }
+  } else if (platform === 'x') {
+    chatbot.addMessage('X/Twitter analysis coming soon! For now, you can test Reddit threads.', 'ai');
   }
   
   // Return false to prevent any default behavior
   return false;
+}
+
+// Analyze thread with backend
+async function analyzeThread(threadData) {
+  try {
+    chatbot.addMessage('Analyzing thread with GPT-4o mini...', 'ai');
+    
+    const response = await fetch(`${API_BASE_URL}/summarize`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(threadData)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const analysis = await response.json();
+    
+    // Format analysis for display
+    let analysisText = `**${analysis.type.toUpperCase()}**\n\n`;
+    analysisText += `**TL;DR:** ${analysis.tldr}\n\n`;
+    analysisText += `**Summary:**\n`;
+    analysis.summary.forEach((point, i) => {
+      analysisText += `• ${point}\n`;
+    });
+    
+    if (analysis.best_answer) {
+      analysisText += `\n**Best Answer:** ${analysis.best_answer}`;
+    }
+    if (analysis.controversial) {
+      analysisText += `\n\n**Controversial:** ${analysis.controversial}`;
+    }
+    if (analysis.funny) {
+      analysisText += `\n\n**Funny:** ${analysis.funny}`;
+    }
+    if (analysis.insights) {
+      analysisText += `\n\n**Insights:** ${analysis.insights}`;
+    }
+    
+    chatbot.addMessage(analysisText, 'ai');
+    
+  } catch (error) {
+    console.error('Analysis error:', error);
+    chatbot.addMessage(`Sorry, analysis failed: ${error.message}. Make sure the backend is running!`, 'ai');
+  }
 }
 
 // Initialize when script loads
