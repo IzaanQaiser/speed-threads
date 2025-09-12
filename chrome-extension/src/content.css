@@ -224,6 +224,9 @@
   display: none;
   pointer-events: auto;
   padding: 0 20px 20px 20px;
+  /* Prevent scroll propagation */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .speedthreads-chatbot.open {
@@ -251,6 +254,9 @@
   transform: translateY(20px) scale(0.95);
   opacity: 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Prevent scroll propagation */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .speedthreads-chatbot.open .speedthreads-chatbot-window {
@@ -325,10 +331,13 @@
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.6) rgba(255, 255, 255, 0.1);
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
   min-height: 0;
   padding-right: 8px;
   margin-right: -8px;
+  /* Prevent scroll propagation to parent */
+  isolation: isolate;
 }
 
 /* Custom scrollbar for webkit browsers */
