@@ -417,6 +417,15 @@ class SpeedThreadsChatbot {
     }
   }
 
+  // Cleanup method to remove event listeners
+  cleanup() {
+    // Remove the chatbot element from DOM
+    const chatbot = document.getElementById(CONFIG.CHATBOT_ID);
+    if (chatbot) {
+      chatbot.remove();
+    }
+  }
+
   addMessage(content, type = 'user', id = null, isThinking = false, hasRetry = false, elapsedTime = null) {
     const newMessage = {
       id: id || Date.now(),
@@ -581,6 +590,30 @@ class SpeedThreadsChatbot {
         e.preventDefault();
         e.stopPropagation();
         this.closeChatbot();
+      }
+    });
+
+    // Click outside to close functionality
+    document.addEventListener('click', (e) => {
+      // Only handle if chatbot is open
+      if (!this.isOpen) return;
+      
+      // Ensure we have a valid target
+      if (!e.target || !e.target.nodeType) return;
+      
+      const chatbot = document.getElementById(CONFIG.CHATBOT_ID);
+      if (!chatbot) return;
+      
+      // Check if click is outside the chatbot
+      if (!chatbot.contains(e.target)) {
+        // Small delay to prevent accidental closes during rapid interactions
+        setTimeout(() => {
+          if (this.isOpen) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.closeChatbot();
+          }
+        }, 10);
       }
     });
 
