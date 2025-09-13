@@ -375,7 +375,9 @@ class SpeedThreadsChatbot {
       // Convert bullet points
       .replace(/^• /gm, '• ')
       // Convert numbered lists
-      .replace(/^\d+\. /gm, (match) => match);
+      .replace(/^\d+\. /gm, (match) => match)
+      // Convert URLs to clickable links (but blocked)
+      .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" class="speedthreads-blocked-link" data-url="$1">$1</a>');
     
     return formatted;
   }
@@ -407,6 +409,13 @@ class SpeedThreadsChatbot {
     if (chatbot) {
       chatbot.classList.add('open');
     }
+    // Add class to body to block all links
+    document.body.classList.add('speedthreads-chatbot-open');
+    
+    // Also disable all links by overriding their onclick handlers
+    this.disableAllLinks();
+    
+    console.log('SpeedThreads: Chatbot opened, body class added, links disabled');
   }
 
   closeChatbot() {
@@ -415,6 +424,63 @@ class SpeedThreadsChatbot {
     if (chatbot) {
       chatbot.classList.remove('open');
     }
+    // Remove class from body to allow links again
+    document.body.classList.remove('speedthreads-chatbot-open');
+    
+    // Re-enable all links
+    this.enableAllLinks();
+    
+    console.log('SpeedThreads: Chatbot closed, body class removed, links enabled');
+  }
+
+  disableAllLinks() {
+    // Store original onclick handlers
+    this.originalOnClickHandlers = new Map();
+    
+    // Find all links on the page
+    const allLinks = document.querySelectorAll('a[href]');
+    console.log('SpeedThreads: Disabling', allLinks.length, 'links');
+    
+    allLinks.forEach((link, index) => {
+      // Store original onclick if it exists
+      if (link.onclick) {
+        this.originalOnClickHandlers.set(link, link.onclick);
+      }
+      
+      // Override onclick to prevent navigation
+      link.onclick = (e) => {
+        console.log('SpeedThreads: Link onclick blocked:', link.href);
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      };
+      
+      // Also add a data attribute to mark as disabled
+      link.setAttribute('data-speedthreads-disabled', 'true');
+    });
+  }
+
+  enableAllLinks() {
+    if (!this.originalOnClickHandlers) return;
+    
+    // Find all links that were disabled
+    const disabledLinks = document.querySelectorAll('a[data-speedthreads-disabled="true"]');
+    console.log('SpeedThreads: Re-enabling', disabledLinks.length, 'links');
+    
+    disabledLinks.forEach((link) => {
+      // Restore original onclick handler
+      if (this.originalOnClickHandlers.has(link)) {
+        link.onclick = this.originalOnClickHandlers.get(link);
+      } else {
+        link.onclick = null;
+      }
+      
+      // Remove the disabled marker
+      link.removeAttribute('data-speedthreads-disabled');
+    });
+    
+    // Clear the stored handlers
+    this.originalOnClickHandlers.clear();
   }
 
   // Cleanup method to remove event listeners
@@ -424,6 +490,10 @@ class SpeedThreadsChatbot {
     if (chatbot) {
       chatbot.remove();
     }
+    // Remove body class to restore link functionality
+    document.body.classList.remove('speedthreads-chatbot-open');
+    // Re-enable all links
+    this.enableAllLinks();
   }
 
   addMessage(content, type = 'user', id = null, isThinking = false, hasRetry = false, elapsedTime = null) {
@@ -577,7 +647,7 @@ class SpeedThreadsChatbot {
   attachEventListeners() {
     // Toggle button
     document.addEventListener('click', (e) => {
-      if (e.target.closest('.speedthreads-chatbot-toggle')) {
+      if (e.target && e.target.closest && e.target.closest('.speedthreads-chatbot-toggle')) {
         e.preventDefault();
         e.stopPropagation();
         this.toggle();
@@ -586,41 +656,47 @@ class SpeedThreadsChatbot {
 
     // Close button
     document.addEventListener('click', (e) => {
-      if (e.target.closest('.speedthreads-chatbot-close')) {
+      if (e.target && e.target.closest && e.target.closest('.speedthreads-chatbot-close')) {
         e.preventDefault();
         e.stopPropagation();
         this.closeChatbot();
       }
     });
 
-    // Click outside to close functionality
+    // Click outside to close functionality - run in capture phase BEFORE link navigation
     document.addEventListener('click', (e) => {
       // Only handle if chatbot is open
       if (!this.isOpen) return;
       
       // Ensure we have a valid target
-      if (!e.target || !e.target.nodeType) return;
+      if (!e.target || !e.target.nodeType || !e.target.closest) return;
       
       const chatbot = document.getElementById(CONFIG.CHATBOT_ID);
       if (!chatbot) return;
       
       // Check if click is outside the chatbot
       if (!chatbot.contains(e.target)) {
-        // Small delay to prevent accidental closes during rapid interactions
-        setTimeout(() => {
-          if (this.isOpen) {
-            e.preventDefault();
-            e.stopPropagation();
-            this.closeChatbot();
-          }
-        }, 10);
+        console.log('SpeedThreads: Click outside chatbot detected, blocking and closing');
+        
+        // ALWAYS block the event when clicking outside chatbot
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        
+        // Close the chatbot
+        this.closeChatbot();
+        
+        // Mark that we handled this click
+        e.speedthreadsOutsideHandled = true;
+        
+        return false;
       }
-    });
+    }, true);
 
 
     // Send button and Enter key
     document.addEventListener('click', (e) => {
-      if (e.target.closest('.speedthreads-chatbot-send')) {
+      if (e.target && e.target.closest && e.target.closest('.speedthreads-chatbot-send')) {
         e.preventDefault();
         e.stopPropagation();
         this.handleSendMessage();
@@ -628,7 +704,7 @@ class SpeedThreadsChatbot {
     });
 
     document.addEventListener('keypress', (e) => {
-      if (e.target.closest('.speedthreads-chatbot-input') && e.key === 'Enter') {
+      if (e.target && e.target.closest && e.target.closest('.speedthreads-chatbot-input') && e.key === 'Enter') {
         e.preventDefault();
         e.stopPropagation();
         this.handleSendMessage();
@@ -637,6 +713,7 @@ class SpeedThreadsChatbot {
 
     // Prevent scroll propagation from chatbot to page
     document.addEventListener('wheel', (e) => {
+      if (!e.target || !e.target.closest) return;
       const chatElement = e.target.closest('.speedthreads-chatbot');
       if (chatElement) {
         // Always stop propagation to prevent page scrolling
@@ -656,7 +733,7 @@ class SpeedThreadsChatbot {
 
     // Prevent scroll propagation from chatbot to page
     document.addEventListener('scroll', (e) => {
-      if (e.target.closest('.speedthreads-chatbot')) {
+      if (e.target && e.target.closest && e.target.closest('.speedthreads-chatbot')) {
         e.preventDefault();
         e.stopPropagation();
       }
@@ -664,7 +741,7 @@ class SpeedThreadsChatbot {
 
     // Additional scroll prevention for touch events
     document.addEventListener('touchmove', (e) => {
-      if (e.target.closest('.speedthreads-chatbot')) {
+      if (e.target && e.target.closest && e.target.closest('.speedthreads-chatbot')) {
         e.preventDefault();
         e.stopPropagation();
       }
@@ -672,13 +749,53 @@ class SpeedThreadsChatbot {
 
     // Retry button event listener
     document.addEventListener('click', (e) => {
-      if (e.target.closest('.speedthreads-retry-button')) {
+      if (e.target && e.target.closest && e.target.closest('.speedthreads-retry-button')) {
         e.preventDefault();
         e.stopPropagation();
         const messageId = parseInt(e.target.getAttribute('data-message-id'));
         this.handleRetryAnalysis(messageId);
       }
     });
+
+    // Block all link clicks when chatbot is open - use capture phase with high priority
+    document.addEventListener('click', (e) => {
+      // Check if chatbot is open by looking at the DOM element
+      const chatbot = document.getElementById(CONFIG.CHATBOT_ID);
+      const isOpen = chatbot && chatbot.classList.contains('open');
+      
+      // Only process if chatbot is open
+      if (!isOpen) return;
+      
+      // Don't process if click outside was already handled
+      if (e.speedthreadsOutsideHandled) {
+        console.log('SpeedThreads: Click outside was handled, skipping link blocking');
+        return;
+      }
+      
+      // Ensure we have a valid target
+      if (!e.target || !e.target.closest) return;
+      
+      // Check if the clicked element is a link or inside a link
+      const linkElement = e.target.closest('a[href]');
+      if (linkElement) {
+        console.log('SpeedThreads: Link clicked:', linkElement.href, 'Chatbot open:', isOpen);
+        
+        // Don't block links inside the chatbot itself (like retry buttons)
+        if (chatbot && chatbot.contains(linkElement)) {
+          console.log('SpeedThreads: Allowing link inside chatbot');
+          return; // Allow links inside chatbot to work normally
+        }
+        
+        // Block all other links
+        console.log('SpeedThreads: BLOCKING LINK:', linkElement.href);
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        
+        console.log('SpeedThreads: Link click blocked when chatbot is open:', linkElement.href);
+        return false;
+      }
+    }, true);
   }
 
   async handleSendMessage() {

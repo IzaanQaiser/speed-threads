@@ -17,3 +17,4 @@
 - add glow to messages
 - add highlight sliding on Analyzing message
 - add realtime time elapsed to "thinking.." when you send a message to the model + timing report
+- have some way to keep memory until the user goes to a new URL + dont analyse again and again everytime the button is pressed 

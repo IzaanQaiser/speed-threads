@@ -434,6 +434,54 @@
   line-height: 1.6;
 }
 
+/* Blocked link styles */
+.speedthreads-blocked-link {
+  color: rgba(255, 255, 255, 0.6) !important;
+  text-decoration: line-through;
+  cursor: not-allowed;
+  pointer-events: none;
+  opacity: 0.7;
+  position: relative;
+}
+
+.speedthreads-blocked-link:hover {
+  color: rgba(255, 255, 255, 0.6) !important;
+  text-decoration: line-through;
+}
+
+.speedthreads-blocked-link::after {
+  content: ' (blocked)';
+  font-size: 0.8em;
+  color: rgba(255, 100, 100, 0.8);
+  font-style: italic;
+}
+
+/* Block all links when chatbot is open */
+body.speedthreads-chatbot-open a[href]:not(.speedthreads-chatbot a[href]) {
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+  position: relative !important;
+}
+
+/* Add a subtle overlay to indicate links are blocked */
+body.speedthreads-chatbot-open a[href]:not(.speedthreads-chatbot a[href])::after {
+  content: '🚫';
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  font-size: 10px;
+  background: rgba(255, 0, 0, 0.8);
+  color: white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
 /* Thinking animation styles */
 .thinking-message {
   display: flex;
