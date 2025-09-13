@@ -18,3 +18,4 @@
 **st-17:** add colourful highlight to speedthreads name and to timing report <br>
 **st-18:** add colourful highlight to live time elapsed in analysis announcement and to send button <br>
 **st-19:** fixed scroll event containment for chat window - prevents page scrolling when chat content doesn't need internal scrolling <br>
+**st-20:** make chat window close when the user clicks outside of it <br>
