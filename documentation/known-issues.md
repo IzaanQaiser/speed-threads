@@ -15,5 +15,4 @@
 ### things to do
 - smooth scrolling
 - add glow to messages
-- if there is no need for a scrollbar within, you can scroll on the outside
 - add highlight sliding on Analyzing message
