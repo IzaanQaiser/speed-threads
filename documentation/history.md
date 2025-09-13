@@ -17,3 +17,4 @@
 **st-16:** add sliding highlight to analysis announcement <br>
 **st-17:** add colourful highlight to speedthreads name and to timing report <br>
 **st-18:** add colourful highlight to live time elapsed in analysis announcement and to send button <br>
+**st-19:** scrolling bubbling up when there is no need for an inner scroll bar on the chat window popup <br>
