@@ -265,13 +265,39 @@ class SpeedThreadsChatbot {
     if (messagesContainer) {
       messagesContainer.addEventListener('wheel', (e) => {
         e.stopPropagation();
-        // Allow normal scrolling within the messages container
-      }, { passive: true });
+        
+        // Check if the container can actually scroll
+        const canScrollUp = messagesContainer.scrollTop > 0;
+        const canScrollDown = messagesContainer.scrollTop < (messagesContainer.scrollHeight - messagesContainer.clientHeight);
+        
+        // If we can't scroll in the direction of the wheel event, prevent it
+        if (e.deltaY < 0 && !canScrollUp) {
+          e.preventDefault();
+        } else if (e.deltaY > 0 && !canScrollDown) {
+          e.preventDefault();
+        }
+        // If we can scroll, let the default behavior handle it
+      }, { passive: false });
       
       messagesContainer.addEventListener('scroll', (e) => {
         e.stopPropagation();
       }, { passive: true });
     }
+    
+    // Add scroll containment to the entire chat window
+    chatWindow.addEventListener('wheel', (e) => {
+      e.stopPropagation();
+      
+      // Check if the event is on the messages container
+      const messagesContainer = chatWindow.querySelector('.speedthreads-chatbot-messages');
+      if (e.target === messagesContainer || messagesContainer?.contains(e.target)) {
+        // Let the messages container handle its own scrolling logic
+        return;
+      }
+      
+      // For all other elements in the chat window, prevent scrolling
+      e.preventDefault();
+    }, { passive: false });
     
     chatbot.appendChild(toggleButton);
     chatbot.appendChild(chatWindow);
@@ -578,9 +604,20 @@ class SpeedThreadsChatbot {
 
     // Prevent scroll propagation from chatbot to page
     document.addEventListener('wheel', (e) => {
-      if (e.target.closest('.speedthreads-chatbot')) {
-        e.preventDefault();
+      const chatElement = e.target.closest('.speedthreads-chatbot');
+      if (chatElement) {
+        // Always stop propagation to prevent page scrolling
         e.stopPropagation();
+        
+        // Check if the event is on the messages container
+        const messagesContainer = chatElement.querySelector('.speedthreads-chatbot-messages');
+        if (e.target === messagesContainer || messagesContainer?.contains(e.target)) {
+          // Let the messages container handle its own scrolling logic
+          return;
+        }
+        
+        // For all other elements within the chat, prevent scrolling
+        e.preventDefault();
       }
     }, { passive: false });
 
