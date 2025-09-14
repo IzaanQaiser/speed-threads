@@ -202,6 +202,7 @@ class SpeedThreadsChatbot {
     this.messages = [];
     this.timerInterval = null;
     this.startTime = null;
+    this.currentRequestController = null;
     this.init();
   }
 
@@ -236,7 +237,6 @@ class SpeedThreadsChatbot {
         </div>
         <div class="speedthreads-chatbot-actions">
           <button class="speedthreads-chatbot-close" title="Close (ESC)">
-            <span class="speedthreads-close-x">×</span>
             <span class="speedthreads-esc-indicator">ESC</span>
           </button>
         </div>
@@ -427,6 +427,17 @@ class SpeedThreadsChatbot {
     if (chatbot) {
       chatbot.classList.remove('open');
     }
+    
+    // Cancel any ongoing requests
+    if (this.currentRequestController) {
+      console.log('SpeedThreads: Cancelling ongoing request');
+      this.currentRequestController.abort();
+      this.currentRequestController = null;
+    }
+    
+    // Hide analyzing overlay if it's showing
+    this.hideAnalyzing();
+    
     // Remove class from body to allow links again
     document.body.classList.remove('speedthreads-chatbot-open');
     
@@ -828,6 +839,9 @@ class SpeedThreadsChatbot {
     this.addMessage('Thinking', 'ai', loadingId, true);
     
     try {
+      // Create new AbortController for this request
+      this.currentRequestController = new AbortController();
+      
       // Get current thread data
       const platform = getPlatform();
       let threadData;
@@ -864,7 +878,8 @@ class SpeedThreadsChatbot {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(chatRequest)
+        body: JSON.stringify(chatRequest),
+        signal: this.currentRequestController.signal
       });
       
       if (!response.ok) {
@@ -872,6 +887,9 @@ class SpeedThreadsChatbot {
       }
       
       const result = await response.json();
+      
+      // Clear the controller since request completed successfully
+      this.currentRequestController = null;
       
       // Remove loading message
       this.removeMessage(loadingId);
@@ -899,7 +917,19 @@ class SpeedThreadsChatbot {
       
     } catch (error) {
       console.error('Chat error:', error);
+      
+      // Clear the controller
+      this.currentRequestController = null;
+      
+      // Remove loading message
       this.removeMessage(loadingId);
+      
+      // Check if it was aborted
+      if (error.name === 'AbortError') {
+        console.log('SpeedThreads: Chat request was cancelled');
+        return; // Don't show error message for cancelled requests
+      }
+      
       this.addMessage(`Sorry, I encountered an error: ${error.message}. Make sure the backend is running!`, 'ai');
     }
   }
@@ -1735,6 +1765,9 @@ async function analyzeThread(threadData) {
   const startTime = Date.now();
   
   try {
+    // Create new AbortController for this request
+    chatbot.currentRequestController = new AbortController();
+    
     // Show analyzing overlay
     chatbot.showAnalyzing();
     
@@ -1743,7 +1776,8 @@ async function analyzeThread(threadData) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(threadData)
+      body: JSON.stringify(threadData),
+      signal: chatbot.currentRequestController.signal
     });
     
     if (!response.ok) {
@@ -1751,6 +1785,9 @@ async function analyzeThread(threadData) {
     }
     
     const analysis = await response.json();
+    
+    // Clear the controller since request completed successfully
+    chatbot.currentRequestController = null;
     
     // Hide analyzing overlay
     chatbot.hideAnalyzing();
@@ -1779,8 +1816,19 @@ async function analyzeThread(threadData) {
     
   } catch (error) {
     console.error('Analysis error:', error);
+    
+    // Clear the controller
+    chatbot.currentRequestController = null;
+    
     // Hide analyzing overlay on error
     chatbot.hideAnalyzing();
+    
+    // Check if it was aborted
+    if (error.name === 'AbortError') {
+      console.log('SpeedThreads: Analysis was cancelled');
+      return; // Don't show error message for cancelled requests
+    }
+    
     chatbot.addMessage(`Sorry, analysis failed: ${error.message}. Make sure the backend is running!`, 'ai', null, false, true);
   }
 }
