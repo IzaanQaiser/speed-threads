@@ -91,7 +91,7 @@ async def summarize_thread(thread_data: ThreadData):
     try:
         logger.info("🤖 Calling OpenAI service for thread analysis...")
         result = openai_service.analyze_thread(thread_data)
-        logger.info(f"✅ Analysis completed successfully - Type: {result.type}, TLDR: {result.tldr[:100]}...")
+        logger.info(f"✅ Analysis completed successfully - Post Type: {result.post_type}, Summary: {result.thread_summary[:100]}...")
         return result
     except Exception as e:
         logger.error(f"❌ Analysis failed: {str(e)}", exc_info=True)

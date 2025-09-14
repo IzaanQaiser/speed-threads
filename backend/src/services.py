@@ -31,31 +31,64 @@ class OpenAIService:
         thread_text = self._format_thread_data(thread_data)
         logger.info(f"📄 Formatted thread text length: {len(thread_text)} chars")
         
-        prompt = f"""You are SpeedThreads AI, an expert at analyzing Reddit and X threads. Analyze this thread and provide a structured summary.
+        prompt = f"""You are SpeedThreads AI, an expert at analyzing Reddit and X threads. Follow this 3-step process:
+
+**Step 1 — Identify Post Type**
+Classify the post as one of these categories:
+- **Question** → OP is asking for advice, solutions, or recommendations
+- **Opinion/Discussion** → OP is sharing a view, hot take, or starting a debate  
+- **Funny/Entertainment** → OP is joking, sharing memes, or looking for laughs
+- **News/Info** → OP is sharing an announcement, update, or informational content
+
+**Step 2 — Tailor the Summary**
+Write a **Thread Summary** (2–3 sentences) that adapts to the post type:
+- **Question posts** → "The OP asked ___, and most answers suggest ___, while others argue ___."
+- **Opinion posts** → "The OP shared their take that ___, and the main counterpoints are ___."
+- **Funny posts** → "The OP posted a joke about ___, with most replies adding more humor."
+- **News posts** → "The OP shared news about ___, and replies focus on ___."
+
+**Step 3 — Classify Replies**
+Group the best replies by category with emoji icons. Do NOT include author names - just show the reply text and explanation.
+
+For **Question posts**: 💡 Helpful, ⚡ Controversial, 🔎 Insightful, 😂 Funny
+For **Opinion posts**: 👍 Supportive, ⚡ Opposing, 🔎 Insightful, 😂 Funny  
+For **Funny posts**: 😂 Funniest, 💡 Clever, ⭐ Popular
+For **News posts**: 🔎 Insightful, ⚡ Critical, 👍 Supportive, 😂 Funny
 
 {thread_text}
 
-Please analyze this thread and provide:
-1. **Post Type**: Classify as question, humor, advice, discussion, rant, informative, support, or other
-2. **TL;DR**: One-line summary of the main point
-3. **Summary**: 3-5 bullet points covering key points
-4. **Best Answer**: The most helpful or insightful reply (if any)
-5. **Controversial**: Any controversial or divisive comments (if any)
-6. **Funny**: Any humorous or entertaining comments (if any)
-7. **Insights**: Additional analysis about community response, sentiment, or patterns
+CRITICAL: 
+1. Respond with ONLY valid JSON matching this exact format
+2. Do NOT include author names - set author field to empty string ""
+3. Focus on the reply content and categorization
 
-CRITICAL: Respond with ONLY valid JSON. The "summary" field MUST be an array of strings, not a single string.
-
-Example format:
 {{
-    "type": "question",
-    "tldr": "One-line summary",
-    "summary": ["First key point", "Second key point", "Third key point"],
-    "best_answer": "Most helpful reply or null",
-    "controversial": "Controversial comment or null", 
-    "funny": "Funny comment or null",
-    "suggested_reply": "Suggested reply or null",
-    "insights": "Additional analysis or null"
+    "post_type": "Question",
+    "thread_summary": "The OP asked whether to learn Python or JavaScript first. Most answers suggest Python for beginners, though some argue JS is more practical for web development.",
+    "key_replies": [
+        {{
+            "emoji": "💡",
+            "name": "Helpful",
+            "replies": [
+                {{
+                    "author": "",
+                    "text": "Start with Python. Its syntax is cleaner and you can pick up core concepts faster.",
+                    "explanation": "Directly answers OP's question with a clear recommendation"
+                }}
+            ]
+        }},
+        {{
+            "emoji": "⚡",
+            "name": "Controversial", 
+            "replies": [
+                {{
+                    "author": "",
+                    "text": "Python is useless unless you want to do AI. JS is the only language worth learning.",
+                    "explanation": "Polarizing statement that contradicts most other replies"
+                }}
+            ]
+        }}
+    ]
 }}"""
 
         try:
@@ -78,9 +111,9 @@ Example format:
             result = json.loads(response.choices[0].message.content)
             logger.info(f"✅ JSON parsed successfully - Keys: {list(result.keys())}")
             
-            # Log the actual summary field to debug format issues
-            if 'summary' in result:
-                logger.info(f"📋 Summary field type: {type(result['summary'])}, Value: {result['summary']}")
+            # Log the actual fields to debug format issues
+            if 'key_replies' in result:
+                logger.info(f"📋 Key replies field type: {type(result['key_replies'])}, Count: {len(result['key_replies']) if isinstance(result['key_replies'], list) else 'N/A'}")
             
             return SummaryResponse(**result)
             
@@ -89,31 +122,20 @@ Example format:
             logger.error(f"📄 Raw response content: {response.choices[0].message.content[:500]}...")
             # Return a fallback response if JSON parsing fails
             return SummaryResponse(
-                type="other",
-                tldr="Analysis failed - please try again",
-                summary=["Unable to process thread data"],
-                insights=f"JSON Error: {str(e)}"
+                post_type="Question",
+                thread_summary="Analysis failed - please try again",
+                key_replies=[]
             )
         except Exception as e:
             # Check if it's a Pydantic validation error
             if "validation error" in str(e).lower():
                 logger.error(f"❌ Pydantic validation failed: {str(e)}")
                 logger.error(f"📄 Raw response content: {response.choices[0].message.content[:500]}...")
-                # Try to fix common issues
-                if 'summary' in result and isinstance(result['summary'], str):
-                    logger.info("🔧 Attempting to fix summary field - converting string to list")
-                    result['summary'] = [result['summary']]
-                    try:
-                        return SummaryResponse(**result)
-                    except Exception as fix_error:
-                        logger.error(f"❌ Fix attempt failed: {str(fix_error)}")
-                
-                # Return fallback if fix fails
+                # Return fallback if validation fails
                 return SummaryResponse(
-                    type="other",
-                    tldr="Analysis failed - format error",
-                    summary=["Unable to process thread data"],
-                    insights=f"Validation Error: {str(e)}"
+                    post_type="Question",
+                    thread_summary="Analysis failed - format error",
+                    key_replies=[]
                 )
             
             logger.error(f"❌ OpenAI API call failed: {str(e)}", exc_info=True)

@@ -870,25 +870,17 @@ class SpeedThreadsChatbot {
       // If this is the first message and we got analysis, show it
       if (result.analysis && this.messages.length <= 3) {
         const analysis = result.analysis;
-        let analysisText = `**${analysis.type.toUpperCase()}**\n\n`;
-        analysisText += `**TL;DR:** ${analysis.tldr}\n\n`;
-        analysisText += `**Summary:**\n`;
-        analysis.summary.forEach((point, i) => {
-          analysisText += `• ${point}\n`;
-        });
+        let analysisText = `**Thread Summary**\n> ${analysis.thread_summary}\n\n`;
+        analysisText += `**Key Replies**\n\n`;
         
-        if (analysis.best_answer) {
-          analysisText += `\n**Best Answer:** ${analysis.best_answer}`;
-        }
-        if (analysis.controversial) {
-          analysisText += `\n\n**Controversial:** ${analysis.controversial}`;
-        }
-        if (analysis.funny) {
-          analysisText += `\n\n**Funny:** ${analysis.funny}`;
-        }
-        if (analysis.insights) {
-          analysisText += `\n\n**Insights:** ${analysis.insights}`;
-        }
+        // Group replies by category
+        analysis.key_replies.forEach(category => {
+          analysisText += `${category.emoji} **${category.name}**\n`;
+          category.replies.forEach(reply => {
+            analysisText += `- "${reply.text}"\n`;
+            analysisText += `  > ${reply.explanation}\n\n`;
+          });
+        });
         
         this.addMessage(analysisText, 'ai');
       }
@@ -1673,25 +1665,16 @@ window.testSpeedThreads = async function() {
     
     // Display in a nice format
     console.log('\n📋 SPEEDTHREADS ANALYSIS:');
-    console.log(`📌 Type: ${analysis.type}`);
-    console.log(`⚡ TL;DR: ${analysis.tldr}`);
-    console.log('📝 Summary:');
-    analysis.summary.forEach((point, i) => {
-      console.log(`   ${i + 1}. ${point}`);
+    console.log(`📌 Post Type: ${analysis.post_type}`);
+    console.log(`📝 Thread Summary: ${analysis.thread_summary}`);
+    console.log('🔑 Key Replies:');
+    analysis.key_replies.forEach((category, i) => {
+      console.log(`   ${category.emoji} ${category.name}:`);
+      category.replies.forEach((reply, j) => {
+        console.log(`     ${j + 1}. "${reply.text}"`);
+        console.log(`        > ${reply.explanation}`);
+      });
     });
-    
-    if (analysis.best_answer) {
-      console.log(`💡 Best Answer: ${analysis.best_answer}`);
-    }
-    if (analysis.controversial) {
-      console.log(`🔥 Controversial: ${analysis.controversial}`);
-    }
-    if (analysis.funny) {
-      console.log(`😄 Funny: ${analysis.funny}`);
-    }
-    if (analysis.insights) {
-      console.log(`🧠 Insights: ${analysis.insights}`);
-    }
     
     return analysis;
     
@@ -1768,25 +1751,17 @@ async function analyzeThread(threadData) {
     const formattedElapsedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${milliseconds.toString().padStart(3, '0')}`;
     
     // Format analysis for display
-    let analysisText = `**${analysis.type.toUpperCase()}**\n\n`;
-    analysisText += `**TL;DR:** ${analysis.tldr}\n\n`;
-    analysisText += `**Summary:**\n`;
-    analysis.summary.forEach((point, i) => {
-      analysisText += `• ${point}\n`;
-    });
+    let analysisText = `**Thread Summary**\n> ${analysis.thread_summary}\n\n`;
+    analysisText += `**Key Replies**\n\n`;
     
-    if (analysis.best_answer) {
-      analysisText += `\n**Best Answer:** ${analysis.best_answer}`;
-    }
-    if (analysis.controversial) {
-      analysisText += `\n\n**Controversial:** ${analysis.controversial}`;
-    }
-    if (analysis.funny) {
-      analysisText += `\n\n**Funny:** ${analysis.funny}`;
-    }
-    if (analysis.insights) {
-      analysisText += `\n\n**Insights:** ${analysis.insights}`;
-    }
+    // Group replies by category
+    analysis.key_replies.forEach(category => {
+      analysisText += `${category.emoji} **${category.name}**\n`;
+      category.replies.forEach(reply => {
+        analysisText += `- "${reply.text}"\n`;
+        analysisText += `  > ${reply.explanation}\n\n`;
+      });
+    });
     
     chatbot.addMessage(analysisText, 'ai', null, false, false, formattedElapsedTime);
     
