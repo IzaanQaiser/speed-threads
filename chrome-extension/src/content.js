@@ -235,7 +235,10 @@ class SpeedThreadsChatbot {
           <span>speedthreads</span>
         </div>
         <div class="speedthreads-chatbot-actions">
-          <button class="speedthreads-chatbot-close">×</button>
+          <button class="speedthreads-chatbot-close" title="Close (ESC)">
+            <span class="speedthreads-close-x">×</span>
+            <span class="speedthreads-esc-indicator">ESC</span>
+          </button>
         </div>
       </div>
       <div class="speedthreads-chatbot-content">
@@ -708,6 +711,15 @@ class SpeedThreadsChatbot {
         e.preventDefault();
         e.stopPropagation();
         this.handleSendMessage();
+      }
+    });
+
+    // ESC key to close chatbot
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.isOpen) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.closeChatbot();
       }
     });
 
