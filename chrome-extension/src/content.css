@@ -464,24 +464,6 @@ body.speedthreads-chatbot-open a[href]:not(.speedthreads-chatbot a[href]) {
   position: relative !important;
 }
 
-/* Add a subtle overlay to indicate links are blocked */
-body.speedthreads-chatbot-open a[href]:not(.speedthreads-chatbot a[href])::after {
-  content: '🚫';
-  position: absolute;
-  top: -2px;
-  right: -2px;
-  font-size: 10px;
-  background: rgba(255, 0, 0, 0.8);
-  color: white;
-  border-radius: 50%;
-  width: 16px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
 /* Thinking animation styles */
 .thinking-message {
   display: flex;

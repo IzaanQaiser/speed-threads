@@ -20,4 +20,5 @@
 **st-19:** fixed scroll event containment for chat window - prevents page scrolling when chat content doesn't need internal scrolling <br>
 **st-20:** make chat window close when the user clicks outside of it <br>
 **st-21:** dont open links that are clicked off of the popup window when trying to close the chat popup window <br>
+**st-22:** remove added elements on blocked URLs <br>
 **st-22:** dont re-analyze everytime the "speedthreads" button is pressed until the URL changes or the page reloads <br>
