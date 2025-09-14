@@ -19,15 +19,20 @@ class ThreadData(BaseModel):
     post: PostData
     replies: List[ReplyData]
 
+class KeyReply(BaseModel):
+    author: str
+    text: str
+    explanation: str
+
+class ReplyCategory(BaseModel):
+    emoji: str
+    name: str
+    replies: List[KeyReply]
+
 class SummaryResponse(BaseModel):
-    type: Literal["question", "humor", "advice", "discussion", "rant", "informative", "support", "other"]
-    tldr: str
-    summary: List[str]
-    best_answer: Optional[str] = None
-    controversial: Optional[str] = None
-    funny: Optional[str] = None
-    suggested_reply: Optional[str] = None
-    insights: Optional[str] = None
+    post_type: Literal["Question", "Opinion/Discussion", "Funny/Entertainment", "News/Info"]
+    thread_summary: str
+    key_replies: List[ReplyCategory]
 
 class ChatMessage(BaseModel):
     role: Literal["user", "assistant", "system"]
