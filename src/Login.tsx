@@ -15,7 +15,7 @@ const Login: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
 
-  // Add CSS animation keyframes
+  // Add CSS animation keyframes and reset styles
   useEffect(() => {
     if (!document.getElementById('speedthreads-gradient-animation')) {
       const style = document.createElement('style');
@@ -25,6 +25,22 @@ const Login: React.FC = () => {
           0% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
+        }
+        * {
+          box-sizing: border-box;
+        }
+        html, body {
+          margin: 0;
+          padding: 0;
+          height: 100%;
+          width: 100%;
+          background: #0f0f0f;
+          overflow: hidden;
+        }
+        #root {
+          height: 100vh;
+          width: 100vw;
+          background: #0f0f0f;
         }
       `;
       document.head.appendChild(style);
@@ -140,11 +156,17 @@ const Login: React.FC = () => {
   return (
     <div style={{
       minHeight: '100vh',
+      height: '100vh',
+      width: '100vw',
+      position: 'fixed',
+      top: 0,
+      left: 0,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       background: 'linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%)',
-      fontFamily: 'system-ui, -apple-system, sans-serif'
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+      overflow: 'hidden'
     }}>
       {/* Gradient border container */}
       <div style={{
@@ -155,7 +177,8 @@ const Login: React.FC = () => {
         borderRadius: '22px',
         width: '424px',
         boxSizing: 'border-box',
-        position: 'relative'
+        position: 'relative',
+        overflow: 'hidden'
       }}>
         <div style={{
           background: '#1a1a1a',
@@ -164,7 +187,9 @@ const Login: React.FC = () => {
           boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)',
           width: '100%',
           boxSizing: 'border-box',
-          position: 'relative'
+          position: 'relative',
+          border: 'none',
+          outline: 'none'
         }}>
         <div style={{
           background: 'linear-gradient(135deg, #6b8cff 0%, #9a7bfa 25%, #e893fb 50%, #e5576c 75%, #3facfe 100%)',
