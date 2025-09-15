@@ -54,16 +54,105 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   
   if (request.type === 'CHECK_AUTH') {
     // Check if user is authenticated
-    chrome.storage.local.get(['speedthreads_authenticated', 'speedthreads_token'])
-      .then(result => {
-        const isAuth = result.speedthreads_authenticated && result.speedthreads_token;
-        sendResponse({ authenticated: isAuth });
-      });
+    checkAuthenticationStatus().then(isAuth => {
+      sendResponse({ authenticated: isAuth });
+    });
     return true; // Keep message channel open for async response
   }
   
   // TODO: Handle API calls to backend
 });
+
+// Check authentication status with fallback to web app sync
+async function checkAuthenticationStatus() {
+  try {
+    console.log('SpeedThreads: Checking authentication status...');
+    
+    // First check if we have auth data in extension storage
+    const result = await chrome.storage.local.get(['speedthreads_authenticated', 'speedthreads_token', 'speedthreads_user']);
+    console.log('SpeedThreads: Stored auth data:', result);
+    
+    const hasStoredAuth = result.speedthreads_authenticated && result.speedthreads_token;
+    
+    if (hasStoredAuth) {
+      // Check if token is expired
+      try {
+        const payload = JSON.parse(atob(result.speedthreads_token.split('.')[1]));
+        const now = Math.floor(Date.now() / 1000);
+        if (payload.exp && payload.exp < now) {
+          console.log('SpeedThreads: Stored token has expired');
+          await chrome.storage.local.remove(['speedthreads_token', 'speedthreads_user', 'speedthreads_authenticated']);
+          return await syncFromWebApp();
+        }
+        console.log('SpeedThreads: Using stored authentication');
+        return true;
+      } catch (error) {
+        console.log('SpeedThreads: Invalid stored token format');
+        await chrome.storage.local.remove(['speedthreads_token', 'speedthreads_user', 'speedthreads_authenticated']);
+        return await syncFromWebApp();
+      }
+    }
+    
+    // If no stored auth, try to sync from web app
+    console.log('SpeedThreads: No stored auth, attempting to sync from web app');
+    return await syncFromWebApp();
+  } catch (error) {
+    console.error('SpeedThreads: Authentication check failed:', error);
+    return false;
+  }
+}
+
+// Sync authentication data from web app localStorage
+async function syncFromWebApp() {
+  try {
+    console.log('SpeedThreads: Attempting to sync from web app...');
+    
+    // Check if we can access the web app's localStorage
+    const tabs = await chrome.tabs.query({ url: 'http://localhost:3000/*' });
+    console.log('SpeedThreads: Found web app tabs:', tabs.length);
+    
+    if (tabs.length > 0) {
+      console.log('SpeedThreads: Injecting script into web app tab:', tabs[0].id);
+      
+      // Inject script to get localStorage data
+      const results = await chrome.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        func: () => {
+          return {
+            token: localStorage.getItem('speedthreads_token'),
+            user: localStorage.getItem('speedthreads_user')
+          };
+        }
+      });
+      
+      console.log('SpeedThreads: Script execution results:', results);
+      
+      if (results && results[0] && results[0].result) {
+        const { token, user } = results[0].result;
+        console.log('SpeedThreads: Retrieved from web app - token:', !!token, 'user:', !!user);
+        
+        if (token && user) {
+          const userObj = JSON.parse(user);
+          await chrome.storage.local.set({
+            speedthreads_token: token,
+            speedthreads_user: userObj,
+            speedthreads_authenticated: true
+          });
+          console.log('SpeedThreads: Synced auth data from web app successfully');
+          return true;
+        } else {
+          console.log('SpeedThreads: No auth data found in web app localStorage');
+        }
+      }
+    } else {
+      console.log('SpeedThreads: No web app tabs found');
+    }
+    return false;
+  } catch (error) {
+    console.error('SpeedThreads: Failed to sync from web app:', error);
+    return false;
+  }
+}
 
 // Start keep-alive mechanism
 function startKeepAlive() {

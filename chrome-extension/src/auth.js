@@ -22,7 +22,7 @@ const STORAGE_KEYS = {
 const LOGIN_URL = 'http://localhost:3000/login';
 
 /**
- * Check if user is authenticated by validating stored token
+ * Check if user is authenticated by checking stored token
  * @returns {Promise<boolean>} True if authenticated, false otherwise
  */
 async function isAuthenticated() {
@@ -37,11 +37,17 @@ async function isAuthenticated() {
       return false;
     }
     
-    // Validate token with Supabase
-    const isValid = await validateToken(token);
-    if (!isValid) {
-      console.log('SpeedThreads: Token validation failed');
-      // Clear invalid token
+    // Check if token is expired (basic JWT expiration check)
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const now = Math.floor(Date.now() / 1000);
+      if (payload.exp && payload.exp < now) {
+        console.log('SpeedThreads: Token has expired');
+        await clearAuthData();
+        return false;
+      }
+    } catch (error) {
+      console.log('SpeedThreads: Invalid token format');
       await clearAuthData();
       return false;
     }
@@ -154,6 +160,43 @@ function openLoginPage() {
 }
 
 /**
+ * Sync authentication data from web app localStorage
+ * This function can be called to check if the user is logged in on the web app
+ */
+async function syncFromWebApp() {
+  try {
+    // Check if we can access the web app's localStorage
+    const tabs = await chrome.tabs.query({ url: 'http://localhost:3000/*' });
+    if (tabs.length > 0) {
+      // Inject script to get localStorage data
+      const results = await chrome.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        func: () => {
+          return {
+            token: localStorage.getItem('speedthreads_token'),
+            user: localStorage.getItem('speedthreads_user')
+          };
+        }
+      });
+      
+      if (results && results[0] && results[0].result) {
+        const { token, user } = results[0].result;
+        if (token && user) {
+          const userObj = JSON.parse(user);
+          await storeAuthData(token, userObj);
+          console.log('SpeedThreads: Synced auth data from web app');
+          return true;
+        }
+      }
+    }
+    return false;
+  } catch (error) {
+    console.error('SpeedThreads: Failed to sync from web app:', error);
+    return false;
+  }
+}
+
+/**
  * Listen for authentication state changes from login page
  */
 function setupAuthListener() {
@@ -180,5 +223,6 @@ window.SpeedThreadsAuth = {
   getCurrentUser,
   getCurrentToken,
   openLoginPage,
-  setupAuthListener
+  setupAuthListener,
+  syncFromWebApp
 };

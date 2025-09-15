@@ -18,8 +18,9 @@ const AuthCallback: React.FC = () => {
           console.log('User:', data.session.user);
           console.log('JWT Token:', data.session.access_token);
           
-          // Save token to localStorage
+          // Save token and user to localStorage
           localStorage.setItem("speedthreads_token", data.session.access_token);
+          localStorage.setItem("speedthreads_user", JSON.stringify(data.session.user));
           
           // Notify extension if running in extension context
           if (window.chrome && window.chrome.runtime) {
@@ -34,10 +35,8 @@ const AuthCallback: React.FC = () => {
             }
           }
           
-          // Redirect to main app or show success
-          alert('Login successful! Check console for user data and JWT token.');
-          // You can redirect to your main app here
-          // window.location.href = '/dashboard';
+          // Redirect to main app
+          window.location.href = '/';
         }
       } catch (err) {
         console.error('Auth callback error:', err);
