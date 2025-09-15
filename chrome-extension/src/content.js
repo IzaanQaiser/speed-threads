@@ -1582,7 +1582,30 @@ function showLoginPrompt() {
   
   // Add event listeners
   document.getElementById('speedthreads-login-btn').addEventListener('click', () => {
-    chrome.tabs.create({ url: 'http://localhost:3000/login' });
+    console.log('SpeedThreads: Sign In button clicked, opening login page');
+    
+    // Try Chrome extension API first
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
+      try {
+        chrome.tabs.create({ url: 'http://localhost:3000/login' });
+        console.log('SpeedThreads: Login page opened via Chrome API');
+        overlay.remove();
+        return;
+      } catch (error) {
+        console.error('SpeedThreads: Chrome API failed:', error);
+      }
+    }
+    
+    // Fallback: use window.open
+    try {
+      window.open('http://localhost:3000/login', '_blank');
+      console.log('SpeedThreads: Login page opened via window.open');
+    } catch (error) {
+      console.error('SpeedThreads: window.open failed:', error);
+      // Last resort: redirect current tab
+      window.location.href = 'http://localhost:3000/login';
+    }
+    
     overlay.remove();
   });
   
