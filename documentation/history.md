@@ -23,4 +23,4 @@
 **st-22:** remove added elements on blocked URLs <br>
 **st-23:** fix up summarisation outputs <br>
 **st-24:** escape to close <br>
-**st-22:** dont re-analyze everytime the "speedthreads" button is pressed until the URL changes or the page reloads <br>
+**st-25:** dont re-analyze everytime the "speedthreads" button is pressed until the URL changes or the page reloads <br>
