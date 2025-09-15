@@ -11,16 +11,11 @@ from supabase import create_client, Client
 # Load environment variables
 load_dotenv()
 
-# Initialize Supabase client
+# Initialize Supabase client (optional)
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
 
-if not SUPABASE_URL or not SUPABASE_ANON_KEY:
-    raise ValueError("SUPABASE_URL and SUPABASE_ANON_KEY must be set in environment variables")
-
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
-
-# Configure logging
+# Configure logging first
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -30,6 +25,19 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+# Initialize Supabase client (optional)
+supabase = None
+if SUPABASE_URL and SUPABASE_ANON_KEY:
+    try:
+        supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+        logger.info("✅ Supabase client initialized successfully")
+    except Exception as e:
+        logger.warning(f"⚠️ Supabase client initialization failed: {e}")
+        logger.warning("Authentication features will be disabled")
+        supabase = None
+else:
+    logger.warning("⚠️ SUPABASE_URL and SUPABASE_ANON_KEY not set - Authentication features disabled")
 
 app = FastAPI(
     title="SpeedThreads API",
@@ -82,7 +90,8 @@ async def root():
 async def health_check():
     return {
         "status": "healthy",
-        "openai_configured": openai_service is not None
+        "openai_configured": openai_service is not None,
+        "supabase_configured": supabase is not None
     }
 
 @app.post("/summarize", response_model=SummaryResponse)
@@ -152,6 +161,10 @@ async def chat_about_thread(request: ChatRequest):
 @app.post("/auth/validate")
 async def validate_token(request: dict):
     """Validate JWT token with Supabase (secure backend endpoint)"""
+    if not supabase:
+        logger.warning("❌ Supabase not available - authentication disabled")
+        return {"valid": False, "error": "Authentication service not available"}
+    
     token = request.get("token")
     if not token:
         raise HTTPException(status_code=400, detail="Token is required")
@@ -181,6 +194,10 @@ async def validate_token(request: dict):
 @app.get("/auth/user")
 async def get_user_info(authorization: str = None):
     """Get user information from token"""
+    if not supabase:
+        logger.warning("❌ Supabase not available - authentication disabled")
+        raise HTTPException(status_code=503, detail="Authentication service not available")
+    
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Authorization header required")
     
