@@ -24,4 +24,4 @@
 **st-23:** fix up summarisation outputs <br>
 **st-24:** escape to close <br>
 **st-25:** keep AI conversations specific to the analysed post and do not cross contaminate. re-analysis is not being triggered. <br>
-**st-26:** persistent storage (chats survive reloads). <br>
+**st-26:** plan cloud, database, document store, authentication, etc. <br>
