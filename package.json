@@ -4,8 +4,9 @@
   "description": "Instantly summarize Reddit and X (Twitter) threads using local AI",
   "main": "index.js",
   "scripts": {
-    "build": "echo 'Build script placeholder'",
-    "dev": "echo 'Dev script placeholder'",
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
     "test": "echo 'Test script placeholder'"
   },
   "keywords": [
@@ -21,5 +22,14 @@
   "devDependencies": {
     "@types/chrome": "^0.0.254"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.5"
+  }
 }

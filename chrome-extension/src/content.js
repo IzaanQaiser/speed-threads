@@ -1412,10 +1412,208 @@ function setupUrlChangeDetection() {
   });
 }
 
+// Check if user is authenticated
+async function checkAuthentication() {
+  try {
+    const response = await chrome.runtime.sendMessage({ type: 'CHECK_AUTH' });
+    return response.authenticated || false;
+  } catch (error) {
+    console.error('SpeedThreads: Failed to check authentication:', error);
+    return false;
+  }
+}
+
+// Show login prompt when user is not authenticated
+function showLoginPrompt() {
+  // Add CSS animation keyframes if not already added
+  if (!document.getElementById('speedthreads-gradient-animation')) {
+    const style = document.createElement('style');
+    style.id = 'speedthreads-gradient-animation';
+    style.textContent = `
+      @keyframes gradient-shift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Create a dark overlay to prompt for login
+  const overlay = document.createElement('div');
+  overlay.id = 'speedthreads-login-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: system-ui, -apple-system, sans-serif;
+    padding: 0;
+    margin: 0;
+  `;
+  
+  // Create gradient border container
+  const borderContainer = document.createElement('div');
+  borderContainer.style.cssText = `
+    background: linear-gradient(135deg, #6b8cff 0%, #9a7bfa 25%, #e893fb 50%, #e5576c 75%, #3facfe 100%);
+    background-size: 300% 300%;
+    animation: gradient-shift 6s ease-in-out infinite;
+    padding: 2px;
+    border-radius: 18px;
+    width: 424px;
+    margin: 1rem;
+    display: block;
+    box-sizing: border-box;
+    position: relative;
+  `;
+
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    background: #1a1a1a;
+    padding: 2.5rem;
+    border-radius: 16px;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    position: relative;
+  `;
+  
+  borderContainer.appendChild(modal);
+  
+  modal.innerHTML = `
+    <div style="
+      background: linear-gradient(135deg, #6b8cff 0%, #9a7bfa 25%, #e893fb 50%, #e5576c 75%, #3facfe 100%);
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem 0;
+      letter-spacing: -0.02em;
+      animation: gradient-shift 6s ease-in-out infinite;
+    ">speedthreads</div>
+    
+    <h2 style="
+      margin: 0 0 1rem 0; 
+      color: #ffffff; 
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    ">Authentication Required</h2>
+    
+    <p style="
+      margin: 0 0 2rem 0; 
+      color: #a0a0a0;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    ">
+      Please sign in to access SpeedThreads features and start analyzing threads.
+    </p>
+    
+    <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; align-items: center;">
+      <button id="speedthreads-login-btn" style="
+        background: linear-gradient(135deg, #6b8cff 0%, #9a7bfa 25%, #e893fb 50%, #e5576c 75%, #3facfe 100%);
+        background-size: 300% 300%;
+        animation: gradient-shift 6s ease-in-out infinite;
+        color: white;
+        border: none;
+        padding: 0.875rem 2rem;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(124, 158, 255, 0.2);
+        letter-spacing: -0.01em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+      " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(124, 158, 255, 0.3)'" 
+         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(124, 158, 255, 0.2)'">
+        Sign In
+      </button>
+      
+      <button id="speedthreads-close-btn" style="
+        background: #2a2a2a;
+        color: #a0a0a0;
+        border: 1px solid #404040;
+        padding: 0.875rem 2rem;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        letter-spacing: -0.01em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+      " onmouseover="this.style.background='#333'; this.style.color='#ffffff'" 
+         onmouseout="this.style.background='#2a2a2a'; this.style.color='#a0a0a0'">
+        Close
+      </button>
+    </div>
+    
+    <div style="
+      margin-top: 1.5rem;
+      padding: 0.75rem;
+      background: rgba(255, 107, 157, 0.1);
+      border: 1px solid rgba(255, 107, 157, 0.2);
+      border-radius: 8px;
+      font-size: 0.8rem;
+      color: #ff6b9d;
+    ">
+      <strong>💡 Tip:</strong> Sign in once and SpeedThreads will remember you across all sessions
+    </div>
+  `;
+  
+  overlay.appendChild(borderContainer);
+  document.body.appendChild(overlay);
+  
+  // Add event listeners
+  document.getElementById('speedthreads-login-btn').addEventListener('click', () => {
+    chrome.tabs.create({ url: 'http://localhost:3000/login' });
+    overlay.remove();
+  });
+  
+  document.getElementById('speedthreads-close-btn').addEventListener('click', () => {
+    overlay.remove();
+  });
+  
+  // Close on escape key
+  const handleEscape = (e) => {
+    if (e.key === 'Escape') {
+      overlay.remove();
+      document.removeEventListener('keydown', handleEscape);
+    }
+  };
+  document.addEventListener('keydown', handleEscape);
+}
+
 // Initialize when DOM is ready
-function initialize() {
+async function initialize() {
   const platform = getPlatform();
   console.log(`SpeedThreads: ${platform} page detected`);
+  
+  // Check authentication before proceeding
+  const isAuth = await checkAuthentication();
+  if (!isAuth) {
+    console.log('SpeedThreads: User not authenticated, skipping UI injection');
+    showLoginPrompt();
+    return;
+  }
+  
+  console.log('SpeedThreads: User authenticated, proceeding with initialization');
   
   // Keep service worker alive
   sendKeepAlive();

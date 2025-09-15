@@ -5,8 +5,18 @@ console.log('SpeedThreads background service worker loaded');
 let keepAliveInterval;
 
 // Handle extension installation
-chrome.runtime.onInstalled.addListener((details) => {
+chrome.runtime.onInstalled.addListener(async (details) => {
   console.log('SpeedThreads extension installed:', details);
+  
+  // On first install, open login page
+  if (details.reason === 'install') {
+    console.log('SpeedThreads: First install detected, opening login page');
+    chrome.tabs.create({ 
+      url: 'http://localhost:3000/login',
+      active: true 
+    });
+  }
+  
   startKeepAlive();
 });
 
@@ -17,6 +27,38 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'KEEP_ALIVE') {
     // Respond to keep-alive messages
     sendResponse({ status: 'alive' });
+    return true; // Keep message channel open for async response
+  }
+  
+  if (request.type === 'AUTH_SUCCESS') {
+    // Store authentication data
+    chrome.storage.local.set({
+      speedthreads_token: request.token,
+      speedthreads_user: request.user,
+      speedthreads_authenticated: true
+    });
+    console.log('SpeedThreads: Auth data stored from background');
+    sendResponse({ success: true });
+  }
+  
+  if (request.type === 'AUTH_LOGOUT') {
+    // Clear authentication data
+    chrome.storage.local.remove([
+      'speedthreads_token',
+      'speedthreads_user', 
+      'speedthreads_authenticated'
+    ]);
+    console.log('SpeedThreads: Auth data cleared from background');
+    sendResponse({ success: true });
+  }
+  
+  if (request.type === 'CHECK_AUTH') {
+    // Check if user is authenticated
+    chrome.storage.local.get(['speedthreads_authenticated', 'speedthreads_token'])
+      .then(result => {
+        const isAuth = result.speedthreads_authenticated && result.speedthreads_token;
+        sendResponse({ authenticated: isAuth });
+      });
     return true; // Keep message channel open for async response
   }
   
