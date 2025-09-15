@@ -26,6 +26,85 @@ const CONFIG = {
   CHATBOT_ID: 'speedthreads-chatbot'
 };
 
+// Cache system for Reddit thread analysis
+const THREAD_CACHE = new Map();
+const CHAT_CACHE = new Map();
+
+// Helper function to generate a content hash for comparison
+function generateContentHash(threadData) {
+  const content = {
+    title: threadData.post?.title || '',
+    text: threadData.post?.text || '',
+    replies: threadData.replies?.map(reply => reply.text || '').join('|') || ''
+  };
+  
+  // Use a simple hash function that works with Unicode characters
+  const contentString = JSON.stringify(content);
+  let hash = 0;
+  for (let i = 0; i < contentString.length; i++) {
+    const char = contentString.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash).toString(36).slice(0, 16); // Convert to base36 and take first 16 chars
+}
+
+// Helper function to compare thread content
+function hasContentChanged(newThreadData, cachedData) {
+  const newHash = generateContentHash(newThreadData);
+  const oldHash = cachedData.contentHash;
+  return newHash !== oldHash;
+}
+
+// Get cached data for current URL
+function getCachedData(url) {
+  return THREAD_CACHE.get(url);
+}
+
+// Set cached data for current URL
+function setCachedData(url, threadData, analysis) {
+  const contentHash = generateContentHash(threadData);
+  THREAD_CACHE.set(url, {
+    threadData,
+    analysis,
+    contentHash,
+    timestamp: Date.now()
+  });
+}
+
+// Get cached chat for current URL
+function getCachedChat(url) {
+  return CHAT_CACHE.get(url) || [];
+}
+
+// Set cached chat for current URL
+function setCachedChat(url, messages) {
+  CHAT_CACHE.set(url, messages);
+}
+
+// Clear cache for a specific URL (useful for testing)
+function clearCacheForUrl(url) {
+  THREAD_CACHE.delete(url);
+  CHAT_CACHE.delete(url);
+}
+
+// Clear all caches (useful for testing)
+function clearAllCaches() {
+  THREAD_CACHE.clear();
+  CHAT_CACHE.clear();
+  console.log('SpeedThreads: All caches cleared');
+}
+
+// Get cache statistics (useful for debugging)
+function getCacheStats() {
+  return {
+    threadCacheSize: THREAD_CACHE.size,
+    chatCacheSize: CHAT_CACHE.size,
+    threadUrls: Array.from(THREAD_CACHE.keys()),
+    chatUrls: Array.from(CHAT_CACHE.keys())
+  };
+}
+
 // Portal and tooltip system for X platform only
 function ensurePortal() {
   let p = document.getElementById('st-portal');
@@ -203,12 +282,36 @@ class SpeedThreadsChatbot {
     this.timerInterval = null;
     this.startTime = null;
     this.currentRequestController = null;
+    this.currentUrl = null;
     this.init();
   }
 
   init() {
     this.createChatbot();
     this.attachEventListeners();
+  }
+
+  // Load chat messages for a specific URL
+  loadChatForUrl(url) {
+    this.currentUrl = url;
+    this.messages = getCachedChat(url);
+    this.renderMessages();
+  }
+
+  // Save current chat messages for the current URL
+  saveChatForUrl() {
+    if (this.currentUrl) {
+      setCachedChat(this.currentUrl, this.messages);
+    }
+  }
+
+  // Clear chat for current URL
+  clearChatForUrl() {
+    if (this.currentUrl) {
+      this.messages = [];
+      setCachedChat(this.currentUrl, []);
+      this.renderMessages();
+    }
   }
 
   createChatbot() {
@@ -523,6 +626,9 @@ class SpeedThreadsChatbot {
     
     this.messages.push(newMessage);
     this.addMessageToDOM(newMessage);
+    
+    // Save chat messages for current URL
+    this.saveChatForUrl();
   }
 
   addMessageToDOM(message) {
@@ -1736,22 +1842,20 @@ function handleSummarizeClick(event) {
   
   console.log('SpeedThreads: Summarize button clicked');
   
+  const currentUrl = window.location.href;
+  const platform = getPlatform();
+  
   // Show chatbot when button is clicked
   if (!chatbot) {
     chatbot = new SpeedThreadsChatbot();
   }
+  
+  // Load chat for current URL (if any exists)
+  chatbot.loadChatForUrl(currentUrl);
   chatbot.toggle();
   
-  // Scrape content and send to backend
-  const platform = getPlatform();
   if (platform === 'reddit') {
-    const threadData = scrapeRedditContent();
-    if (threadData) {
-      // Send to backend for analysis
-      analyzeThread(threadData);
-    } else {
-      chatbot.addMessage('Sorry, I couldn\'t scrape the Reddit content. Please try again.', 'ai');
-    }
+    handleRedditAnalysis(currentUrl);
   } else if (platform === 'x') {
     chatbot.addMessage('X/Twitter analysis coming soon! For now, you can test Reddit threads.', 'ai');
   }
@@ -1760,8 +1864,70 @@ function handleSummarizeClick(event) {
   return false;
 }
 
+// Handle Reddit analysis with caching
+async function handleRedditAnalysis(url) {
+  console.log('SpeedThreads: Handling Reddit analysis for URL:', url);
+  
+  // Always scrape current content to check for changes
+  const currentThreadData = scrapeRedditContent();
+  if (!currentThreadData) {
+    chatbot.addMessage('Sorry, I couldn\'t scrape the Reddit content. Please try again.', 'ai');
+    return;
+  }
+  
+  // Check if we have cached data for this URL
+  const cachedData = getCachedData(url);
+  
+  if (cachedData) {
+    console.log('SpeedThreads: Found cached data for URL');
+    
+    // Check if content has changed
+    if (hasContentChanged(currentThreadData, cachedData)) {
+      console.log('SpeedThreads: Content has changed, re-analyzing...');
+      // Content changed, re-analyze with new data
+      await analyzeThread(currentThreadData, url);
+    } else {
+      console.log('SpeedThreads: Content unchanged, showing cached analysis');
+      // Content unchanged, show cached analysis with animation
+      // Don't load cached chat here - just show the analysis
+      showCachedAnalysis(cachedData.analysis);
+    }
+  } else {
+    console.log('SpeedThreads: No cached data found, analyzing for first time');
+    // No cached data, analyze for the first time
+    await analyzeThread(currentThreadData, url);
+  }
+}
+
+// Show cached analysis with animation
+function showCachedAnalysis(analysis) {
+  // Check if we already have an analysis message in the chat
+  const hasAnalysis = chatbot.messages.some(msg => 
+    msg.type === 'ai' && msg.content.includes('**Thread Summary**')
+  );
+  
+  // Only add analysis if we don't already have one
+  if (!hasAnalysis) {
+    // Format analysis for display (same as in analyzeThread)
+    let analysisText = `**Thread Summary**\n> ${analysis.thread_summary}\n\n`;
+    analysisText += `**Key Replies**\n\n`;
+    
+    // Group replies by category
+    analysis.key_replies.forEach(category => {
+      analysisText += `${category.emoji} **${category.name}**\n`;
+      category.replies.forEach(reply => {
+        analysisText += `- "${reply.text}"\n`;
+        analysisText += `  > ${reply.explanation}\n\n`;
+      });
+    });
+    
+    // Add the analysis message
+    chatbot.addMessage(analysisText, 'ai');
+  }
+}
+
 // Analyze thread with backend
-async function analyzeThread(threadData) {
+async function analyzeThread(threadData, url = null) {
   const startTime = Date.now();
   
   try {
@@ -1791,6 +1957,12 @@ async function analyzeThread(threadData) {
     
     // Hide analyzing overlay
     chatbot.hideAnalyzing();
+    
+    // Cache the analysis if URL is provided
+    if (url) {
+      setCachedData(url, threadData, analysis);
+      console.log('SpeedThreads: Analysis cached for URL:', url);
+    }
     
     // Calculate elapsed time
     const elapsedTime = Date.now() - startTime;
@@ -1847,6 +2019,38 @@ window.testSpeedThreadsFailure = function() {
   chatbot.addMessage('**OTHER**\n\n**TL;DR:** Analysis failed - please try again\n\n**Summary:**\n• Unable to process thread data\n• Simulated error for testing\n\n**Insights:** Error: Simulated failure for testing retry functionality', 'ai', null, false, true);
   
   console.log('✅ Simulated error message added with retry button. Click the "🔄 Retry Analysis" button to test!');
+};
+
+// Debug functions for cache management
+window.speedThreadsDebug = {
+  clearAllCaches,
+  clearCacheForUrl,
+  getCacheStats,
+  getCachedData,
+  getCachedChat,
+  THREAD_CACHE,
+  CHAT_CACHE
+};
+
+// Test function for cache functionality
+window.testSpeedThreadsCache = function() {
+  console.log('🧪 Testing cache functionality...');
+  console.log('Current cache stats:', getCacheStats());
+  
+  const currentUrl = window.location.href;
+  const cachedData = getCachedData(currentUrl);
+  
+  if (cachedData) {
+    console.log('✅ Found cached data for current URL:', currentUrl);
+    console.log('Cached analysis:', cachedData.analysis);
+    console.log('Content hash:', cachedData.contentHash);
+    console.log('Timestamp:', new Date(cachedData.timestamp));
+  } else {
+    console.log('❌ No cached data found for current URL:', currentUrl);
+  }
+  
+  const cachedChat = getCachedChat(currentUrl);
+  console.log('Cached chat messages:', cachedChat.length);
 };
 
 // Initialize when script loads

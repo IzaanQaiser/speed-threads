@@ -23,4 +23,4 @@
 **st-22:** remove added elements on blocked URLs <br>
 **st-23:** fix up summarisation outputs <br>
 **st-24:** escape to close <br>
-**st-22:** dont re-analyze everytime the "speedthreads" button is pressed until the URL changes or the page reloads <br>
+**st-25:** keep AI conversations specific to the analysed post and do not cross contaminate. re-analysis is not being triggered. <br>
