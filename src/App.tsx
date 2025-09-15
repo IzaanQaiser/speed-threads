@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
 import Login from './Login';
+import AuthCallback from './AuthCallback';
 
 interface User {
   id: string;
@@ -11,6 +12,9 @@ interface User {
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Check if we're on the auth callback route
+  const isAuthCallback = window.location.pathname === '/auth/callback';
 
   useEffect(() => {
     // Check for existing session
@@ -65,6 +69,11 @@ const App: React.FC = () => {
     setUser(null);
     localStorage.removeItem("speedthreads_token");
   };
+
+  // Show auth callback component if we're on the callback route
+  if (isAuthCallback) {
+    return <AuthCallback />;
+  }
 
   if (loading) {
     return (

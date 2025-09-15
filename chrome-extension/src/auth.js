@@ -1,10 +1,14 @@
 // SpeedThreads Authentication Utilities
 console.log('SpeedThreads auth utilities loaded');
 
-// Supabase configuration for extension
-const SUPABASE_CONFIG = {
-  url: 'https://ftevaxiungavygbabslo.supabase.co',
-  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0ZXZheGl1bmdhdnlnYmFic2xvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5Mzg0MjcsImV4cCI6MjA3MzUxNDQyN30.OKKTl_Fb6CTrl4uQMY6FWgHUXzCrzVq1zx_IaIOERRI'
+// Backend API configuration
+// This is more secure than exposing Supabase credentials directly
+const API_CONFIG = {
+  baseUrl: 'http://localhost:8000', // Your backend API URL
+  endpoints: {
+    validateToken: '/auth/validate',
+    user: '/auth/user'
+  }
 };
 
 // Storage keys
@@ -51,22 +55,24 @@ async function isAuthenticated() {
 }
 
 /**
- * Validate JWT token with Supabase
+ * Validate JWT token with backend API (more secure)
  * @param {string} token - JWT token to validate
  * @returns {Promise<boolean>} True if valid, false otherwise
  */
 async function validateToken(token) {
   try {
-    const response = await fetch(`${SUPABASE_CONFIG.url}/auth/v1/user`, {
+    const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.validateToken}`, {
+      method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'apikey': SUPABASE_CONFIG.anonKey
-      }
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ token })
     });
     
     if (response.ok) {
-      const user = await response.json();
-      console.log('SpeedThreads: Token validation successful for user:', user.id);
+      const result = await response.json();
+      console.log('SpeedThreads: Token validation successful for user:', result.user?.id);
       return true;
     } else {
       console.log('SpeedThreads: Token validation failed with status:', response.status);
