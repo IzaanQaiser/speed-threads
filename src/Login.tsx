@@ -13,6 +13,7 @@ const Login: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSignUp, setIsSignUp] = useState(false);
 
   // Add CSS animation keyframes
   useEffect(() => {
@@ -64,7 +65,7 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.email || !formData.password) {
@@ -76,14 +77,29 @@ const Login: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password
-      });
+      let data, error;
+      
+      if (isSignUp) {
+        // Sign up
+        const result = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password
+        });
+        data = result.data;
+        error = result.error;
+      } else {
+        // Sign in
+        const result = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password
+        });
+        data = result.data;
+        error = result.error;
+      }
 
       if (error) {
         setError(error.message);
-        console.error('Email login error:', error);
+        console.error(`${isSignUp ? 'Sign up' : 'Login'} error:`, error);
       } else if (data.user && data.session) {
         console.log('User:', data.user);
         console.log('JWT Token:', data.session.access_token);
@@ -107,11 +123,15 @@ const Login: React.FC = () => {
         // Clear form
         setFormData({ email: '', password: '' });
         
-        alert('Login successful! Check console for user data and JWT token.');
+        alert(`${isSignUp ? 'Sign up' : 'Login'} successful! Check console for user data and JWT token.`);
+      } else if (isSignUp && data.user && !data.session) {
+        // Sign up successful but needs email confirmation
+        alert('Sign up successful! Please check your email to confirm your account.');
+        setFormData({ email: '', password: '' });
       }
     } catch (err) {
       setError('An unexpected error occurred');
-      console.error('Email login error:', err);
+      console.error(`${isSignUp ? 'Sign up' : 'Login'} error:`, err);
     } finally {
       setLoading(false);
     }
@@ -170,7 +190,7 @@ const Login: React.FC = () => {
           fontWeight: '600',
           letterSpacing: '-0.01em'
         }}>
-          Welcome Back
+          Welcome to SpeedThreads
         </h1>
 
         {error && (
@@ -227,7 +247,7 @@ const Login: React.FC = () => {
             }
           }}
         >
-          {loading ? 'Loading...' : 'Login with Google'}
+          {loading ? 'Loading...' : 'Continue with Google'}
         </button>
 
         <div style={{
@@ -240,8 +260,51 @@ const Login: React.FC = () => {
           or
         </div>
 
+        {/* Toggle between Login and Sign Up */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          marginBottom: '2rem',
+          gap: '0.5rem'
+        }}>
+          <button
+            type="button"
+            onClick={() => setIsSignUp(false)}
+            style={{
+              padding: '0.5rem 1.5rem',
+              background: isSignUp ? '#2a2a2a' : '#404040',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Login
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsSignUp(true)}
+            style={{
+              padding: '0.5rem 1.5rem',
+              background: isSignUp ? '#404040' : '#2a2a2a',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Sign Up
+          </button>
+        </div>
+
         {/* Email/Password Form */}
-        <form onSubmit={handleEmailLogin}>
+        <form onSubmit={handleEmailAuth}>
           <div style={{ marginBottom: '1.5rem' }}>
             <label htmlFor="email" style={{
               display: 'block',
@@ -361,7 +424,7 @@ const Login: React.FC = () => {
               }
             }}
           >
-            {loading ? 'Signing in...' : 'Login with Email'}
+            {loading ? (isSignUp ? 'Creating account...' : 'Signing in...') : (isSignUp ? 'Sign Up with Email' : 'Login with Email')}
           </button>
         </form>
 
