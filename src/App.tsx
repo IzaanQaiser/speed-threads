@@ -13,6 +13,7 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+
   // Check if we're on the auth callback route
   const isAuthCallback = window.location.pathname === '/auth/callback';
 
@@ -163,47 +164,78 @@ const App: React.FC = () => {
             WebkitTextFillColor: 'transparent',
             animation: 'gradient-shift 6s ease-in-out infinite'
           }}>
-            Welcome to SpeedThreads!
+            Welcome back to speedthreads!
           </h1>
           
+          {/* User Profile Card */}
           <div style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            padding: '1.5rem',
-            borderRadius: '12px',
-            marginBottom: '2rem'
+            background: 'linear-gradient(135deg, rgba(124, 158, 255, 0.1) 0%, rgba(167, 139, 250, 0.1) 50%, rgba(240, 147, 251, 0.1) 100%)',
+            border: '1px solid rgba(124, 158, 255, 0.3)',
+            padding: '2rem',
+            borderRadius: '20px',
+            marginBottom: '2rem',
+            position: 'relative',
+            overflow: 'hidden'
           }}>
-            <h3 style={{ 
-              margin: '0 0 1rem 0', 
-              color: '#fff',
-              fontSize: '1.1rem',
-              fontWeight: '600'
-            }}>User Information:</h3>
-            
+            {/* Animated background gradient */}
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'linear-gradient(135deg, #7c9eff 0%, #a78bfa 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)',
+              backgroundSize: '300% 300%',
+              animation: 'gradient-shift 6s ease-in-out infinite',
+              opacity: 0.1,
+              zIndex: -1
+            }}></div>
+
+            {/* User Avatar */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
-              marginBottom: '1rem',
-              padding: '0.75rem',
-              background: 'rgba(124, 158, 255, 0.1)',
-              borderRadius: '8px',
-              border: '1px solid rgba(124, 158, 255, 0.2)'
+              gap: '1rem',
+              marginBottom: '1.5rem'
             }}>
-              <span style={{ fontSize: '1.2rem' }}>{providerIcon}</span>
-              <span style={{ color: '#7c9eff', fontWeight: '600' }}>Logged in with {providerName}</span>
+              <div style={{
+                width: '60px',
+                height: '60px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #7c9eff 0%, #a78bfa 50%, #f093fb 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.5rem',
+                fontWeight: 'bold',
+                color: 'white',
+                boxShadow: '0 8px 32px rgba(124, 158, 255, 0.3)'
+              }}>
+                {user.email?.charAt(0).toUpperCase() || 'U'}
+              </div>
+              <div>
+                <h3 style={{ 
+                  color: '#fff',
+                  fontSize: '1.3rem',
+                  fontWeight: '700',
+                  background: 'linear-gradient(135deg, #7c9eff 0%, #a78bfa 50%, #f093fb 100%)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}>
+                  {user.email || 'User'}
+                </h3>
+                <p style={{ 
+                  margin: 0, 
+                  color: '#b0b0b0',
+                  fontSize: '0.9rem',
+                  fontWeight: '500'
+                }}>
+                  Authentication: {providerName}
+                </p>
+              </div>
             </div>
 
-            {user.email && (
-              <p style={{ margin: '0.5rem 0', fontSize: '0.9rem', color: '#e0e0e0' }}>
-                <strong style={{ color: '#7c9eff' }}>Email:</strong> {user.email}
-              </p>
-            )}
-            {user.user_metadata && (
-              <p style={{ margin: '0.5rem 0', fontSize: '0.9rem', color: '#e0e0e0' }}>
-                <strong style={{ color: '#7c9eff' }}>Name:</strong> {user.user_metadata.full_name || user.user_metadata.name || 'N/A'}
-              </p>
-            )}
           </div>
 
           <button

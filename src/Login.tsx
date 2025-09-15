@@ -14,6 +14,7 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   // Add CSS animation keyframes and reset styles
   useEffect(() => {
@@ -25,6 +26,16 @@ const Login: React.FC = () => {
           0% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
+        }
+        @keyframes toastSlideIn {
+          0% { 
+            transform: translateX(100%); 
+            opacity: 0; 
+          }
+          100% { 
+            transform: translateX(0); 
+            opacity: 1; 
+          }
         }
         * {
           box-sizing: border-box;
@@ -46,6 +57,16 @@ const Login: React.FC = () => {
       document.head.appendChild(style);
     }
   }, []);
+
+  // Auto-dismiss toast after 5 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -99,7 +120,10 @@ const Login: React.FC = () => {
         // Sign up
         const result = await supabase.auth.signUp({
           email: formData.email,
-          password: formData.password
+          password: formData.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`
+          }
         });
         data = result.data;
         error = result.error;
@@ -120,8 +144,9 @@ const Login: React.FC = () => {
         console.log('User:', data.user);
         console.log('JWT Token:', data.session.access_token);
         
-        // Save token to localStorage
+        // Save token and user to localStorage
         localStorage.setItem("speedthreads_token", data.session.access_token);
+        localStorage.setItem("speedthreads_user", JSON.stringify(data.user));
         
         // Notify extension if running in extension context
         if (window.chrome && window.chrome.runtime) {
@@ -139,10 +164,16 @@ const Login: React.FC = () => {
         // Clear form
         setFormData({ email: '', password: '' });
         
-        alert(`${isSignUp ? 'Sign up' : 'Login'} successful! Check console for user data and JWT token.`);
+        setToast({ 
+          message: `${isSignUp ? 'Sign up' : 'Login'} successful! Check console for user data and JWT token.`, 
+          type: 'success' 
+        });
       } else if (isSignUp && data.user && !data.session) {
         // Sign up successful but needs email confirmation
-        alert('Sign up successful! Please check your email to confirm your account.');
+        setToast({ 
+          message: 'Sign up successful! Please check your email to confirm your account.', 
+          type: 'success' 
+        });
         setFormData({ email: '', password: '' });
       }
     } catch (err) {
@@ -467,6 +498,73 @@ const Login: React.FC = () => {
         </div>
         </div>
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          zIndex: 1000,
+          background: toast.type === 'success' 
+            ? 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+            : 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
+          color: 'white',
+          padding: '1rem 1.5rem',
+          borderRadius: '12px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          maxWidth: '400px',
+          animation: 'toastSlideIn 0.3s ease-out',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          fontFamily: 'system-ui, -apple-system, sans-serif'
+        }}>
+          <div style={{
+            fontSize: '1.2rem',
+            flexShrink: 0
+          }}>
+            {toast.type === 'success' ? '✅' : '❌'}
+          </div>
+          <div style={{
+            flex: 1,
+            fontSize: '0.9rem',
+            fontWeight: '500',
+            lineHeight: '1.4'
+          }}>
+            {toast.message}
+          </div>
+          <button
+            onClick={() => setToast(null)}
+            style={{
+              background: 'rgba(255, 255, 255, 0.2)',
+              border: 'none',
+              color: 'white',
+              borderRadius: '50%',
+              width: '24px',
+              height: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              transition: 'all 0.2s ease',
+              flexShrink: 0
+            }}
+            onMouseOver={(e) => {
+              e.target.style.background = 'rgba(255, 255, 255, 0.3)';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.background = 'rgba(255, 255, 255, 0.2)';
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
     </div>
   );
 };
