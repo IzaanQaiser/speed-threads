@@ -1,6 +1,9 @@
 // SpeedThreads Content Script
 console.log('SpeedThreads content script loaded');
 
+// Load storage module
+const SpeedThreadsStorage = window.SpeedThreadsStorage;
+
 // Filter out noisy CSP font errors from Reddit
 const originalError = console.error;
 console.error = function(...args) {
@@ -26,9 +29,9 @@ const CONFIG = {
   CHATBOT_ID: 'speedthreads-chatbot'
 };
 
-// Cache system for Reddit thread analysis
-const THREAD_CACHE = new Map();
-const CHAT_CACHE = new Map();
+// Cache system for Reddit thread analysis - now with persistent storage
+const THREAD_CACHE = new Map(); // Keep in-memory cache for performance
+const CHAT_CACHE = new Map();   // Keep in-memory cache for performance
 
 // Helper function to generate a content hash for comparison
 function generateContentHash(threadData) {
@@ -56,52 +59,218 @@ function hasContentChanged(newThreadData, cachedData) {
   return newHash !== oldHash;
 }
 
-// Get cached data for current URL
-function getCachedData(url) {
-  return THREAD_CACHE.get(url);
+// Get cached data for current URL (with persistent storage fallback)
+async function getCachedData(url) {
+  console.log('SpeedThreads: getCachedData called for URL:', url);
+  
+  // First check in-memory cache
+  if (THREAD_CACHE.has(url)) {
+    console.log('SpeedThreads: Found data in memory cache');
+    return THREAD_CACHE.get(url);
+  }
+  
+  console.log('SpeedThreads: No data in memory cache, checking persistent storage');
+  
+  // If not in memory, try to load from persistent storage
+  if (SpeedThreadsStorage) {
+    try {
+      const session = await SpeedThreadsStorage.loadSession(url);
+      if (session && session.scraped_data && session.summary) {
+        console.log('SpeedThreads: Found session in persistent storage, converting to cache format');
+        // Convert session format to cache format
+        const cacheData = SpeedThreadsStorage.convertSessionToCache(session);
+        // Store in memory cache for faster access
+        THREAD_CACHE.set(url, cacheData);
+        console.log('SpeedThreads: Data loaded from persistent storage and cached in memory');
+        return cacheData;
+      } else {
+        console.log('SpeedThreads: No valid session found in persistent storage');
+      }
+    } catch (error) {
+      console.error('SpeedThreads: Error loading from persistent storage:', error);
+    }
+  } else {
+    console.log('SpeedThreads: SpeedThreadsStorage not available');
+  }
+  
+  console.log('SpeedThreads: No cached data found for URL:', url);
+  return null;
 }
 
-// Set cached data for current URL
-function setCachedData(url, threadData, analysis) {
+// Set cached data for current URL (with persistent storage)
+async function setCachedData(url, threadData, analysis) {
   const contentHash = generateContentHash(threadData);
-  THREAD_CACHE.set(url, {
+  const cacheData = {
     threadData,
     analysis,
     contentHash,
     timestamp: Date.now()
-  });
+  };
+  
+  // Store in memory cache
+  THREAD_CACHE.set(url, cacheData);
+  
+  // Also save to persistent storage
+  if (SpeedThreadsStorage) {
+    try {
+      // Get existing chat history for this URL
+      const chatHistory = getCachedChat(url);
+      
+      // Convert to session format and save
+      const session = SpeedThreadsStorage.convertCacheToSession(threadData, analysis, chatHistory);
+      await SpeedThreadsStorage.saveSession(url, session);
+      console.log('SpeedThreads: Data saved to persistent storage for URL:', url);
+    } catch (error) {
+      console.error('SpeedThreads: Error saving to persistent storage:', error);
+    }
+  }
 }
 
-// Get cached chat for current URL
-function getCachedChat(url) {
-  return CHAT_CACHE.get(url) || [];
+// Get cached chat for current URL (with persistent storage fallback)
+async function getCachedChat(url) {
+  // First check in-memory cache
+  if (CHAT_CACHE.has(url)) {
+    return CHAT_CACHE.get(url);
+  }
+  
+  // If not in memory, try to load from persistent storage
+  if (SpeedThreadsStorage) {
+    try {
+      const session = await SpeedThreadsStorage.loadSession(url);
+      if (session && session.chat_history) {
+        console.log('SpeedThreads: Loading chat from persistent storage for URL:', url);
+        console.log('SpeedThreads: Raw chat history:', session.chat_history);
+        
+        // Convert session format to cache format
+        const chatMessages = session.chat_history.map(msg => ({
+          id: msg.id || Date.now(),
+          type: msg.role === 'user' ? 'user' : 'ai',
+          content: msg.content,
+          timestamp: new Date(msg.timestamp || Date.now())
+        }));
+        
+        console.log('SpeedThreads: Converted chat messages:', chatMessages);
+        
+        // Store in memory cache
+        CHAT_CACHE.set(url, chatMessages);
+        return chatMessages;
+      }
+    } catch (error) {
+      console.error('SpeedThreads: Error loading chat from persistent storage:', error);
+    }
+  }
+  
+  return [];
 }
 
-// Set cached chat for current URL
-function setCachedChat(url, messages) {
+// Set cached chat for current URL (with persistent storage)
+async function setCachedChat(url, messages) {
+  console.log('SpeedThreads: Saving chat for URL:', url);
+  console.log('SpeedThreads: Messages to save:', messages);
+  
+  // Store in memory cache
   CHAT_CACHE.set(url, messages);
+  
+  // Also save to persistent storage
+  if (SpeedThreadsStorage) {
+    try {
+      // Get existing session data
+      const session = await SpeedThreadsStorage.loadSession(url);
+      if (session) {
+        // Update chat history
+        const chatHistory = messages.map(msg => ({
+          role: msg.type === 'user' ? 'user' : 'assistant',
+          content: msg.content,
+          timestamp: msg.timestamp ? msg.timestamp.toISOString() : new Date().toISOString(),
+          id: msg.id
+        }));
+        
+        console.log('SpeedThreads: Converting messages to chat history:', chatHistory);
+        
+        const updatedSession = {
+          ...session,
+          chat_history: chatHistory
+        };
+        await SpeedThreadsStorage.saveSession(url, updatedSession);
+        console.log('SpeedThreads: Chat saved to persistent storage for URL:', url);
+      } else {
+        // No existing session, create new one with just chat
+        const chatHistory = messages.map(msg => ({
+          role: msg.type === 'user' ? 'user' : 'assistant',
+          content: msg.content,
+          timestamp: msg.timestamp ? msg.timestamp.toISOString() : new Date().toISOString(),
+          id: msg.id
+        }));
+        
+        console.log('SpeedThreads: Creating new session with chat history:', chatHistory);
+        
+        const newSession = {
+          scraped_data: null,
+          summary: null,
+          chat_history: chatHistory,
+          last_updated: new Date().toISOString()
+        };
+        await SpeedThreadsStorage.saveSession(url, newSession);
+        console.log('SpeedThreads: New chat session created in persistent storage for URL:', url);
+      }
+    } catch (error) {
+      console.error('SpeedThreads: Error saving chat to persistent storage:', error);
+    }
+  }
 }
 
 // Clear cache for a specific URL (useful for testing)
-function clearCacheForUrl(url) {
+async function clearCacheForUrl(url) {
   THREAD_CACHE.delete(url);
   CHAT_CACHE.delete(url);
+  
+  if (SpeedThreadsStorage) {
+    try {
+      await SpeedThreadsStorage.deleteSession(url);
+      console.log('SpeedThreads: Session deleted from persistent storage for URL:', url);
+    } catch (error) {
+      console.error('SpeedThreads: Error deleting session from persistent storage:', error);
+    }
+  }
 }
 
 // Clear all caches (useful for testing)
-function clearAllCaches() {
+async function clearAllCaches() {
   THREAD_CACHE.clear();
   CHAT_CACHE.clear();
+  
+  if (SpeedThreadsStorage) {
+    try {
+      await SpeedThreadsStorage.clearAllSessions();
+      console.log('SpeedThreads: All sessions cleared from persistent storage');
+    } catch (error) {
+      console.error('SpeedThreads: Error clearing persistent storage:', error);
+    }
+  }
+  
   console.log('SpeedThreads: All caches cleared');
 }
 
 // Get cache statistics (useful for debugging)
-function getCacheStats() {
+async function getCacheStats() {
+  let persistentStats = { sessionCount: 0, totalSize: 0, usagePercent: 0 };
+  
+  if (SpeedThreadsStorage) {
+    try {
+      persistentStats = await SpeedThreadsStorage.getStorageStats();
+    } catch (error) {
+      console.error('SpeedThreads: Error getting persistent storage stats:', error);
+    }
+  }
+  
   return {
     threadCacheSize: THREAD_CACHE.size,
     chatCacheSize: CHAT_CACHE.size,
     threadUrls: Array.from(THREAD_CACHE.keys()),
-    chatUrls: Array.from(CHAT_CACHE.keys())
+    chatUrls: Array.from(CHAT_CACHE.keys()),
+    persistentSessionCount: persistentStats.sessionCount,
+    persistentTotalSize: persistentStats.totalSize,
+    persistentUsagePercent: persistentStats.usagePercent
   };
 }
 
@@ -292,24 +461,27 @@ class SpeedThreadsChatbot {
   }
 
   // Load chat messages for a specific URL
-  loadChatForUrl(url) {
+  async loadChatForUrl(url) {
     this.currentUrl = url;
-    this.messages = getCachedChat(url);
+    this.messages = await getCachedChat(url);
+    console.log('SpeedThreads: Loaded chat for URL:', url);
+    console.log('SpeedThreads: Loaded messages:', this.messages.length);
+    console.log('SpeedThreads: Message types:', this.messages.map(m => m.type));
     this.renderMessages();
   }
 
   // Save current chat messages for the current URL
-  saveChatForUrl() {
+  async saveChatForUrl() {
     if (this.currentUrl) {
-      setCachedChat(this.currentUrl, this.messages);
+      await setCachedChat(this.currentUrl, this.messages);
     }
   }
 
   // Clear chat for current URL
-  clearChatForUrl() {
+  async clearChatForUrl() {
     if (this.currentUrl) {
       this.messages = [];
-      setCachedChat(this.currentUrl, []);
+      await setCachedChat(this.currentUrl, []);
       this.renderMessages();
     }
   }
@@ -451,7 +623,7 @@ class SpeedThreadsChatbot {
           `;
         } else {
           const elapsedTimeHtml = message.elapsedTime ? 
-            `<div class="speedthreads-elapsed-time">Analysis completed in&nbsp;<span class="speedthreads-time-gradient">${message.elapsedTime}</span></div>` : '';
+            `<div class="speedthreads-elapsed-time">Elapsed time:&nbsp;<span class="speedthreads-time-gradient">${message.elapsedTime}</span></div>` : '';
           
           messageEl.innerHTML = `
             ${elapsedTimeHtml}
@@ -621,14 +793,54 @@ class SpeedThreadsChatbot {
       timestamp: new Date(),
       isThinking,
       hasRetry,
-      elapsedTime
+      elapsedTime,
+      startTime: isThinking ? Date.now() : null
     };
     
     this.messages.push(newMessage);
     this.addMessageToDOM(newMessage);
     
-    // Save chat messages for current URL
-    this.saveChatForUrl();
+    // Start live timer for thinking messages
+    if (isThinking) {
+      this.startLiveTimer(newMessage.id);
+    }
+    
+    // Save chat messages for current URL (async, don't wait)
+    this.saveChatForUrl().catch(error => {
+      console.error('SpeedThreads: Error saving chat message:', error);
+    });
+  }
+
+  startLiveTimer(messageId) {
+    const message = this.messages.find(msg => msg.id === messageId);
+    if (!message || !message.isThinking) return;
+    
+    const updateTimer = () => {
+      if (!message.isThinking) return; // Stop if message is no longer thinking
+      
+      const elapsed = Date.now() - message.startTime;
+      const seconds = Math.floor(elapsed / 1000);
+      const milliseconds = Math.floor((elapsed % 1000) / 10);
+      const timeString = `${seconds}.${milliseconds.toString().padStart(2, '0')}s`;
+      
+      const timerElement = document.querySelector(`[data-message-id="${messageId}"] .live-timer`);
+      if (timerElement) {
+        timerElement.textContent = timeString;
+      }
+      
+      // Continue updating every 10ms for smooth display
+      this.timerIntervals = this.timerIntervals || {};
+      this.timerIntervals[messageId] = setTimeout(updateTimer, 10);
+    };
+    
+    updateTimer();
+  }
+
+  stopLiveTimer(messageId) {
+    if (this.timerIntervals && this.timerIntervals[messageId]) {
+      clearTimeout(this.timerIntervals[messageId]);
+      delete this.timerIntervals[messageId];
+    }
   }
 
   addMessageToDOM(message) {
@@ -644,6 +856,7 @@ class SpeedThreadsChatbot {
         <div class="speedthreads-chatbot-message-content thinking-message">
           <div class="thinking-spinner"></div>
           <span class="thinking-text">${message.content}</span>
+          <span class="live-timer">0.00s</span>
         </div>
       `;
     } else {
@@ -683,6 +896,9 @@ class SpeedThreadsChatbot {
   }
 
   removeMessage(id) {
+    // Stop live timer if it's running
+    this.stopLiveTimer(id);
+    
     this.messages = this.messages.filter(msg => msg.id !== id);
     
     // Remove the specific message from DOM
@@ -997,11 +1213,16 @@ class SpeedThreadsChatbot {
       // Clear the controller since request completed successfully
       this.currentRequestController = null;
       
+      // Calculate elapsed time before removing loading message
+      const loadingMessage = this.messages.find(msg => msg.id === loadingId);
+      const elapsedTime = loadingMessage ? 
+        ((Date.now() - loadingMessage.startTime) / 1000).toFixed(2) + 's' : null;
+      
       // Remove loading message
       this.removeMessage(loadingId);
       
-      // Add AI response
-      this.addMessage(result.message, 'ai');
+      // Add AI response with elapsed time
+      this.addMessage(result.message, 'ai', null, false, false, elapsedTime);
       
       // If this is the first message and we got analysis, show it
       if (result.analysis && this.messages.length <= 3) {
@@ -1027,6 +1248,11 @@ class SpeedThreadsChatbot {
       // Clear the controller
       this.currentRequestController = null;
       
+      // Calculate elapsed time before removing loading message
+      const loadingMessage = this.messages.find(msg => msg.id === loadingId);
+      const elapsedTime = loadingMessage ? 
+        ((Date.now() - loadingMessage.startTime) / 1000).toFixed(2) + 's' : null;
+      
       // Remove loading message
       this.removeMessage(loadingId);
       
@@ -1036,7 +1262,7 @@ class SpeedThreadsChatbot {
         return; // Don't show error message for cancelled requests
       }
       
-      this.addMessage(`Sorry, I encountered an error: ${error.message}. Make sure the backend is running!`, 'ai');
+      this.addMessage(`Sorry, I encountered an error: ${error.message}. Make sure the backend is running!`, 'ai', null, false, false, elapsedTime);
     }
   }
 }
@@ -1850,15 +2076,19 @@ function handleSummarizeClick(event) {
     chatbot = new SpeedThreadsChatbot();
   }
   
-  // Load chat for current URL (if any exists)
-  chatbot.loadChatForUrl(currentUrl);
-  chatbot.toggle();
-  
-  if (platform === 'reddit') {
-    handleRedditAnalysis(currentUrl);
-  } else if (platform === 'x') {
-    chatbot.addMessage('X/Twitter analysis coming soon! For now, you can test Reddit threads.', 'ai');
-  }
+  // Load chat for current URL (if any exists) and then handle analysis
+  chatbot.loadChatForUrl(currentUrl).then(async () => {
+    chatbot.toggle();
+    
+    // Handle analysis after chat is loaded
+    if (platform === 'reddit') {
+      // Ensure we also load the thread cache before checking for analysis
+      await getCachedData(currentUrl);
+      handleRedditAnalysis(currentUrl);
+    } else if (platform === 'x') {
+      chatbot.addMessage('X/Twitter analysis coming soon! For now, you can test Reddit threads.', 'ai');
+    }
+  });
   
   // Return false to prevent any default behavior
   return false;
@@ -1876,7 +2106,7 @@ async function handleRedditAnalysis(url) {
   }
   
   // Check if we have cached data for this URL
-  const cachedData = getCachedData(url);
+  const cachedData = await getCachedData(url);
   
   if (cachedData) {
     console.log('SpeedThreads: Found cached data for URL');
@@ -1889,8 +2119,10 @@ async function handleRedditAnalysis(url) {
     } else {
       console.log('SpeedThreads: Content unchanged, showing cached analysis');
       // Content unchanged, show cached analysis with animation
-      // Don't load cached chat here - just show the analysis
-      showCachedAnalysis(cachedData.analysis);
+      // Wait a moment for chat to be fully loaded, then show analysis
+      setTimeout(() => {
+        showCachedAnalysis(cachedData.analysis);
+      }, 100);
     }
   } else {
     console.log('SpeedThreads: No cached data found, analyzing for first time');
@@ -1903,11 +2135,20 @@ async function handleRedditAnalysis(url) {
 function showCachedAnalysis(analysis) {
   // Check if we already have an analysis message in the chat
   const hasAnalysis = chatbot.messages.some(msg => 
-    msg.type === 'ai' && msg.content.includes('**Thread Summary**')
+    msg.type === 'ai' && (
+      msg.content.includes('**Thread Summary**') || 
+      msg.content.includes('Thread Summary') ||
+      msg.content.includes('Key Replies')
+    )
   );
+  
+  console.log('SpeedThreads: Checking for existing analysis. Has analysis:', hasAnalysis);
+  console.log('SpeedThreads: Current messages count:', chatbot.messages.length);
   
   // Only add analysis if we don't already have one
   if (!hasAnalysis) {
+    console.log('SpeedThreads: Adding cached analysis to chat');
+    
     // Format analysis for display (same as in analyzeThread)
     let analysisText = `**Thread Summary**\n> ${analysis.thread_summary}\n\n`;
     analysisText += `**Key Replies**\n\n`;
@@ -1923,6 +2164,8 @@ function showCachedAnalysis(analysis) {
     
     // Add the analysis message
     chatbot.addMessage(analysisText, 'ai');
+  } else {
+    console.log('SpeedThreads: Analysis already exists, skipping cached analysis');
   }
 }
 
@@ -1960,7 +2203,7 @@ async function analyzeThread(threadData, url = null) {
     
     // Cache the analysis if URL is provided
     if (url) {
-      setCachedData(url, threadData, analysis);
+      await setCachedData(url, threadData, analysis);
       console.log('SpeedThreads: Analysis cached for URL:', url);
     }
     
@@ -2033,12 +2276,13 @@ window.speedThreadsDebug = {
 };
 
 // Test function for cache functionality
-window.testSpeedThreadsCache = function() {
+window.testSpeedThreadsCache = async function() {
   console.log('🧪 Testing cache functionality...');
-  console.log('Current cache stats:', getCacheStats());
+  const stats = await getCacheStats();
+  console.log('Current cache stats:', stats);
   
   const currentUrl = window.location.href;
-  const cachedData = getCachedData(currentUrl);
+  const cachedData = await getCachedData(currentUrl);
   
   if (cachedData) {
     console.log('✅ Found cached data for current URL:', currentUrl);
@@ -2049,7 +2293,7 @@ window.testSpeedThreadsCache = function() {
     console.log('❌ No cached data found for current URL:', currentUrl);
   }
   
-  const cachedChat = getCachedChat(currentUrl);
+  const cachedChat = await getCachedChat(currentUrl);
   console.log('Cached chat messages:', cachedChat.length);
 };
 
