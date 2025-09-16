@@ -41,15 +41,24 @@ const LandingPage: React.FC = () => {
           speedthreads
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <button style={{
-            background: 'rgba(255, 255, 255, 0.1)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            color: 'white',
-            padding: '0.5rem 1rem',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease'
-          }}>
+          <button 
+            onClick={() => window.open('https://tally.so/r/wvR8gg', '_blank')}
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              color: 'white',
+              padding: '0.5rem 1rem',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+            }}
+          >
             Get Started
           </button>
         </div>
@@ -145,7 +154,7 @@ const LandingPage: React.FC = () => {
             marginBottom: '3rem'
           }}>
             <button 
-              onClick={() => alert('Coming soon! This will connect to the app later.')}
+              onClick={() => window.open('https://tally.so/r/wvR8gg', '_blank')}
               style={{
                 background: 'linear-gradient(135deg, #7c9eff 0%, #a78bfa 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)',
                 backgroundSize: '300% 300%',
@@ -517,7 +526,7 @@ const LandingPage: React.FC = () => {
             Install SpeedThreads today and never miss the important stuff again.
           </p>
           <button 
-            onClick={() => alert('Coming soon! This will connect to the app later.')}
+            onClick={() => window.open('https://tally.so/r/wvR8gg', '_blank')}
             style={{
               background: 'linear-gradient(135deg, #7c9eff 0%, #a78bfa 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)',
               backgroundSize: '300% 300%',
