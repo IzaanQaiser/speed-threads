@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
@@ -6,11 +6,16 @@ import logging
 import time
 from .models import ThreadData, SummaryResponse, ChatRequest, ChatResponse
 from .services import OpenAIService
+from supabase import create_client, Client
 
 # Load environment variables
 load_dotenv()
 
-# Configure logging
+# Initialize Supabase client (optional)
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
+
+# Configure logging first
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -20,6 +25,19 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+# Initialize Supabase client (optional)
+supabase = None
+if SUPABASE_URL and SUPABASE_ANON_KEY:
+    try:
+        supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+        logger.info("✅ Supabase client initialized successfully")
+    except Exception as e:
+        logger.warning(f"⚠️ Supabase client initialization failed: {e}")
+        logger.warning("Authentication features will be disabled")
+        supabase = None
+else:
+    logger.warning("⚠️ SUPABASE_URL and SUPABASE_ANON_KEY not set - Authentication features disabled")
 
 app = FastAPI(
     title="SpeedThreads API",
@@ -72,7 +90,8 @@ async def root():
 async def health_check():
     return {
         "status": "healthy",
-        "openai_configured": openai_service is not None
+        "openai_configured": openai_service is not None,
+        "supabase_configured": supabase is not None
     }
 
 @app.post("/summarize", response_model=SummaryResponse)
@@ -137,6 +156,68 @@ async def chat_about_thread(request: ChatRequest):
     except Exception as e:
         logger.error(f"❌ Chat failed: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Chat failed: {str(e)}")
+
+# Authentication endpoints for Chrome extension
+@app.post("/auth/validate")
+async def validate_token(request: dict):
+    """Validate JWT token with Supabase (secure backend endpoint)"""
+    if not supabase:
+        logger.warning("❌ Supabase not available - authentication disabled")
+        return {"valid": False, "error": "Authentication service not available"}
+    
+    token = request.get("token")
+    if not token:
+        raise HTTPException(status_code=400, detail="Token is required")
+    
+    try:
+        # Use Supabase to validate the token
+        response = supabase.auth.get_user(token)
+        
+        if response.user:
+            logger.info(f"✅ Token validation successful for user: {response.user.id}")
+            return {
+                "valid": True,
+                "user": {
+                    "id": response.user.id,
+                    "email": response.user.email,
+                    "user_metadata": response.user.user_metadata
+                }
+            }
+        else:
+            logger.warning("❌ Token validation failed - no user found")
+            return {"valid": False, "error": "Invalid token"}
+            
+    except Exception as e:
+        logger.error(f"❌ Token validation error: {str(e)}")
+        return {"valid": False, "error": "Token validation failed"}
+
+@app.get("/auth/user")
+async def get_user_info(authorization: str = None):
+    """Get user information from token"""
+    if not supabase:
+        logger.warning("❌ Supabase not available - authentication disabled")
+        raise HTTPException(status_code=503, detail="Authentication service not available")
+    
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Authorization header required")
+    
+    token = authorization.replace("Bearer ", "")
+    
+    try:
+        response = supabase.auth.get_user(token)
+        
+        if response.user:
+            return {
+                "id": response.user.id,
+                "email": response.user.email,
+                "user_metadata": response.user.user_metadata
+            }
+        else:
+            raise HTTPException(status_code=401, detail="Invalid token")
+            
+    except Exception as e:
+        logger.error(f"❌ Get user error: {str(e)}")
+        raise HTTPException(status_code=401, detail="Authentication failed")
 
 if __name__ == "__main__":
     import uvicorn
