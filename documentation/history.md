@@ -25,7 +25,8 @@
 **st-24:** escape to close <br>
 **st-25:** keep AI conversations specific to the analysed post and do not cross contaminate. re-analysis is not being triggered. <br>
 **st-26:** add time elapsed and time report to conversation "thinking" message. <br>
-**st-27:** extension sign in page. <br>
+**st-27:** supabase sign in integration <br>
+**st-28:** 
 <br>
 need db:
 - pro or free plan
