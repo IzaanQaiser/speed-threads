@@ -1,12 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-interface LandingPageProps {
-  onGetStarted: () => void;
-  onPrivacyPolicy: () => void;
-  onTermsOfService: () => void;
-}
-
-const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onPrivacyPolicy, onTermsOfService }) => {
+const LandingPage: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -151,7 +145,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onPrivacyPolicy
             marginBottom: '3rem'
           }}>
             <button 
-              onClick={onGetStarted}
+              onClick={() => alert('Coming soon! This will connect to the app later.')}
               style={{
                 background: 'linear-gradient(135deg, #7c9eff 0%, #a78bfa 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)',
                 backgroundSize: '300% 300%',
@@ -523,7 +517,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onPrivacyPolicy
             Install SpeedThreads today and never miss the important stuff again.
           </p>
           <button 
-            onClick={onGetStarted}
+            onClick={() => alert('Coming soon! This will connect to the app later.')}
             style={{
               background: 'linear-gradient(135deg, #7c9eff 0%, #a78bfa 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)',
               backgroundSize: '300% 300%',
@@ -596,7 +590,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onPrivacyPolicy
             marginBottom: '2rem'
           }}>
             <button 
-              onClick={onPrivacyPolicy}
+              onClick={() => alert('Privacy Policy coming soon!')}
               style={{ 
                 background: 'none',
                 border: 'none',
@@ -617,7 +611,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onPrivacyPolicy
               Privacy Policy
             </button>
             <button 
-              onClick={onTermsOfService}
+              onClick={() => alert('Terms of Service coming soon!')}
               style={{ 
                 background: 'none',
                 border: 'none',
@@ -638,7 +632,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onPrivacyPolicy
               Terms of Service
             </button>
             <a 
-              href="https://github.com/your-username/speed-threads" 
+              href="https://github.com/IzaanQaiser/speed-threads" 
               target="_blank" 
               rel="noopener noreferrer"
               style={{ 
