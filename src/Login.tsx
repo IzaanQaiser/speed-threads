@@ -19,6 +19,8 @@ const Login: React.FC = () => {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [errorHighlighted, setErrorHighlighted] = useState(false);
 
   // Add CSS animation keyframes and reset styles
   useEffect(() => {
@@ -39,6 +41,24 @@ const Login: React.FC = () => {
           100% { 
             transform: translateX(0); 
             opacity: 1; 
+          }
+        }
+        @keyframes errorHighlight {
+          0% { 
+            background-color: rgba(255, 107, 157, 0.1);
+            border-color: rgba(255, 107, 157, 0.3);
+            transform: scale(1);
+          }
+          50% { 
+            background-color: rgba(255, 107, 157, 0.3);
+            border-color: rgba(255, 107, 157, 0.6);
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(255, 107, 157, 0.4);
+          }
+          100% { 
+            background-color: rgba(255, 107, 157, 0.1);
+            border-color: rgba(255, 107, 157, 0.3);
+            transform: scale(1);
           }
         }
         * {
@@ -72,6 +92,28 @@ const Login: React.FC = () => {
     }
   }, [toast]);
 
+  // Auto-dismiss error after 5 seconds and trigger highlight animation
+  useEffect(() => {
+    if (error) {
+      // Trigger highlight animation
+      setErrorHighlighted(true);
+      const highlightTimer = setTimeout(() => {
+        setErrorHighlighted(false);
+      }, 1000); // Animation duration
+
+      // Auto-dismiss error after 5 seconds
+      const dismissTimer = setTimeout(() => {
+        setError(null);
+        setErrorHighlighted(false);
+      }, 5000);
+
+      return () => {
+        clearTimeout(highlightTimer);
+        clearTimeout(dismissTimer);
+      };
+    }
+  }, [error]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -101,6 +143,53 @@ const Login: React.FC = () => {
     } catch (err) {
       setError('An unexpected error occurred');
       console.error('Google login error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!formData.email) {
+      setError('Please enter your email address first');
+      return;
+    }
+
+    // Clear the email field immediately when button is pressed
+    setFormData(prev => ({
+      ...prev,
+      email: ''
+    }));
+
+    // Close modal after 1 second delay
+    setTimeout(() => {
+      setShowForgotPassword(false);
+    }, 750);
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+        redirectTo: `${window.location.origin}/auth/callback`
+      });
+
+      if (error) {
+        // Handle rate limiting with a generic message
+        if (error.message.includes('rate limit') || error.message.includes('too many requests') || error.message.includes('security purposes')) {
+          setError('For security reasons, you can try again in 5-10 minutes');
+        } else {
+          setError(error.message);
+        }
+        console.error('Password reset error:', error);
+      } else {
+        setToast({ 
+          message: 'Password reset email sent! Please check your inbox.', 
+          type: 'success' 
+        });
+      }
+    } catch (err) {
+      setError('An unexpected error occurred');
+      console.error('Password reset error:', err);
     } finally {
       setLoading(false);
     }
@@ -267,7 +356,9 @@ const Login: React.FC = () => {
             borderRadius: '12px',
             marginBottom: '1.5rem',
             fontSize: '0.9rem',
-            fontWeight: '500'
+            fontWeight: '500',
+            animation: errorHighlighted ? 'errorHighlight 1s ease-in-out' : 'none',
+            transition: 'all 0.3s ease'
           }}>
             {error}
           </div>
@@ -301,14 +392,14 @@ const Login: React.FC = () => {
           }}
           onMouseOver={(e) => {
             if (!loading) {
-              e.target.style.transform = 'translateY(-2px)';
-              e.target.style.boxShadow = '0 6px 16px rgba(124, 158, 255, 0.3)';
+              (e.target as HTMLButtonElement).style.transform = 'translateY(-2px)';
+              (e.target as HTMLButtonElement).style.boxShadow = '0 6px 16px rgba(124, 158, 255, 0.3)';
             }
           }}
           onMouseOut={(e) => {
             if (!loading) {
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.boxShadow = '0 4px 12px rgba(124, 158, 255, 0.2)';
+              (e.target as HTMLButtonElement).style.transform = 'translateY(0)';
+              (e.target as HTMLButtonElement).style.boxShadow = '0 4px 12px rgba(124, 158, 255, 0.2)';
             }
           }}
         >
@@ -471,16 +562,49 @@ const Login: React.FC = () => {
                   transition: 'all 0.2s ease'
                 }}
                 onMouseOver={(e) => {
-                  e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+                  (e.target as HTMLButtonElement).style.background = 'rgba(255, 255, 255, 0.1)';
                 }}
                 onMouseOut={(e) => {
-                  e.target.style.background = 'none';
+                  (e.target as HTMLButtonElement).style.background = 'none';
                 }}
               >
                 {showPassword ? 'HIDE' : 'VIEW'}
               </button>
             </div>
           </div>
+
+          {!isSignUp && (
+            <div style={{ 
+              textAlign: 'right', 
+              marginBottom: '1.5rem',
+              marginTop: '-0.5rem'
+            }}>
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#6b8cff',
+                  fontSize: '0.85rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  textDecoration: 'none',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseOver={(e) => {
+                  (e.target as HTMLButtonElement).style.color = '#9a7bfa';
+                  (e.target as HTMLButtonElement).style.textDecoration = 'underline';
+                }}
+                onMouseOut={(e) => {
+                  (e.target as HTMLButtonElement).style.color = '#6b8cff';
+                  (e.target as HTMLButtonElement).style.textDecoration = 'none';
+                }}
+              >
+                Forgot your password?
+              </button>
+            </div>
+          )}
 
           {isSignUp && (
             <div style={{ marginBottom: '2rem' }}>
@@ -543,10 +667,10 @@ const Login: React.FC = () => {
                     transition: 'all 0.2s ease'
                   }}
                   onMouseOver={(e) => {
-                    e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+                    (e.target as HTMLButtonElement).style.background = 'rgba(255, 255, 255, 0.1)';
                   }}
                   onMouseOut={(e) => {
-                    e.target.style.background = 'none';
+                    (e.target as HTMLButtonElement).style.background = 'none';
                   }}
                 >
                   {showConfirmPassword ? 'HIDE' : 'VIEW'}
@@ -581,14 +705,14 @@ const Login: React.FC = () => {
             }}
             onMouseOver={(e) => {
               if (!loading) {
-                e.target.style.transform = 'translateY(-2px)';
-                e.target.style.boxShadow = '0 6px 16px rgba(124, 158, 255, 0.3)';
+                (e.target as HTMLButtonElement).style.transform = 'translateY(-2px)';
+                (e.target as HTMLButtonElement).style.boxShadow = '0 6px 16px rgba(124, 158, 255, 0.3)';
               }
             }}
             onMouseOut={(e) => {
               if (!loading) {
-                e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = '0 4px 12px rgba(124, 158, 255, 0.2)';
+                (e.target as HTMLButtonElement).style.transform = 'translateY(0)';
+                (e.target as HTMLButtonElement).style.boxShadow = '0 4px 12px rgba(124, 158, 255, 0.2)';
               }
             }}
           >
@@ -599,6 +723,193 @@ const Login: React.FC = () => {
         </div>
       </div>
 
+      {/* Forgot Password Modal */}
+      {showForgotPassword && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          backdropFilter: 'blur(4px)'
+        }}>
+          <div style={{
+            background: '#1a1a1a',
+            padding: '2rem',
+            borderRadius: '20px',
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)',
+            width: '400px',
+            maxWidth: '90vw',
+            border: '1px solid #404040',
+            position: 'relative'
+          }}>
+            <button
+              onClick={() => setShowForgotPassword(false)}
+              style={{
+                position: 'absolute',
+                top: '1rem',
+                right: '1rem',
+                background: 'none',
+                border: 'none',
+                color: '#ffffff',
+                fontSize: '1.5rem',
+                cursor: 'pointer',
+                padding: '0.25rem',
+                borderRadius: '50%',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseOver={(e) => {
+                (e.target as HTMLButtonElement).style.background = 'rgba(255, 255, 255, 0.1)';
+              }}
+              onMouseOut={(e) => {
+                (e.target as HTMLButtonElement).style.background = 'none';
+              }}
+            >
+              ×
+            </button>
+            
+            <h2 style={{
+              color: '#ffffff',
+              fontSize: '1.5rem',
+              fontWeight: '600',
+              marginBottom: '1rem',
+              textAlign: 'center'
+            }}>
+              Reset Password
+            </h2>
+            
+            <p style={{
+              color: '#cccccc',
+              fontSize: '0.9rem',
+              marginBottom: '1.5rem',
+              textAlign: 'center',
+              lineHeight: '1.5'
+            }}>
+              Enter your email address and we'll send you a link to reset your password.
+            </p>
+            
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label htmlFor="forgotEmail" style={{
+                display: 'block',
+                marginBottom: '0.75rem',
+                color: '#ffffff',
+                fontSize: '0.9rem',
+                fontWeight: '600'
+              }}>
+                Email Address
+              </label>
+              <input
+                type="email"
+                id="forgotEmail"
+                value={formData.email}
+                onChange={handleInputChange}
+                name="email"
+                disabled={loading}
+                style={{
+                  width: '100%',
+                  padding: '0.875rem',
+                  background: '#2a2a2a',
+                  border: '1px solid #404040',
+                  borderRadius: '12px',
+                  fontSize: '0.95rem',
+                  color: '#ffffff',
+                  boxSizing: 'border-box',
+                  transition: 'all 0.2s ease',
+                  outline: 'none'
+                }}
+                placeholder="Enter your email"
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#ff6b9d';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(255, 107, 157, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#404040';
+                  e.target.style.boxShadow = 'none';
+                }}
+              />
+            </div>
+            
+            <div style={{
+              display: 'flex',
+              gap: '1rem',
+              justifyContent: 'flex-end'
+            }}>
+              <button
+                onClick={() => setShowForgotPassword(false)}
+                disabled={loading}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: '#2a2a2a',
+                  color: '#ffffff',
+                  border: '1px solid #404040',
+                  borderRadius: '12px',
+                  fontSize: '0.9rem',
+                  fontWeight: '600',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease',
+                  opacity: loading ? 0.7 : 1
+                }}
+                onMouseOver={(e) => {
+                  if (!loading) {
+                    (e.target as HTMLButtonElement).style.background = '#404040';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (!loading) {
+                    (e.target as HTMLButtonElement).style.background = '#2a2a2a';
+                  }
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleForgotPassword}
+                disabled={loading}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: 'linear-gradient(135deg, #6b8cff 0%, #9a7bfa 25%, #e893fb 50%, #e5576c 75%, #3facfe 100%)',
+                  backgroundSize: '300% 300%',
+                  animation: 'gradient-shift 6s ease-in-out infinite',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontSize: '0.9rem',
+                  fontWeight: '600',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.7 : 1,
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 4px 12px rgba(124, 158, 255, 0.2)'
+                }}
+                onMouseOver={(e) => {
+                  if (!loading) {
+                    (e.target as HTMLButtonElement).style.transform = 'translateY(-1px)';
+                    (e.target as HTMLButtonElement).style.boxShadow = '0 6px 16px rgba(124, 158, 255, 0.3)';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (!loading) {
+                    (e.target as HTMLButtonElement).style.transform = 'translateY(0)';
+                    (e.target as HTMLButtonElement).style.boxShadow = '0 4px 12px rgba(124, 158, 255, 0.2)';
+                  }
+                }}
+              >
+                {loading ? 'Sending...' : 'Send Reset Link'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Toast Notification */}
       {toast && (
         <div style={{
@@ -607,8 +918,9 @@ const Login: React.FC = () => {
           right: '20px',
           zIndex: 1000,
           background: toast.type === 'success' 
-            ? 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+            ? 'linear-gradient(135deg, #6b8cff 0%, #9a7bfa 25%, #e893fb 50%, #e5576c 75%, #3facfe 100%)'
             : 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
+          backgroundSize: toast.type === 'success' ? '300% 300%' : '100% 100%',
           color: 'white',
           padding: '1rem 1.5rem',
           borderRadius: '12px',
@@ -616,7 +928,9 @@ const Login: React.FC = () => {
           backdropFilter: 'blur(10px)',
           border: '1px solid rgba(255, 255, 255, 0.2)',
           maxWidth: '400px',
-          animation: 'toastSlideIn 0.3s ease-out',
+          animation: toast.type === 'success' 
+            ? 'toastSlideIn 0.3s ease-out, gradient-shift 6s ease-in-out infinite 0.3s' 
+            : 'toastSlideIn 0.3s ease-out',
           display: 'flex',
           alignItems: 'center',
           gap: '0.75rem',
@@ -655,10 +969,10 @@ const Login: React.FC = () => {
               flexShrink: 0
             }}
             onMouseOver={(e) => {
-              e.target.style.background = 'rgba(255, 255, 255, 0.3)';
+              (e.target as HTMLButtonElement).style.background = 'rgba(255, 255, 255, 0.3)';
             }}
             onMouseOut={(e) => {
-              e.target.style.background = 'rgba(255, 255, 255, 0.2)';
+              (e.target as HTMLButtonElement).style.background = 'rgba(255, 255, 255, 0.2)';
             }}
           >
             ×
