@@ -4,17 +4,21 @@ import { supabase } from './supabaseClient';
 interface LoginFormData {
   email: string;
   password: string;
+  confirmPassword: string;
 }
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Add CSS animation keyframes and reset styles
   useEffect(() => {
@@ -110,6 +114,11 @@ const Login: React.FC = () => {
       return;
     }
 
+    if (isSignUp && formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -162,7 +171,7 @@ const Login: React.FC = () => {
         }
         
         // Clear form
-        setFormData({ email: '', password: '' });
+        setFormData({ email: '', password: '', confirmPassword: '' });
         
         setToast({ 
           message: `${isSignUp ? 'Sign up' : 'Login'} successful! Check console for user data and JWT token.`, 
@@ -174,7 +183,7 @@ const Login: React.FC = () => {
           message: 'Sign up successful! Please check your email to confirm your account.', 
           type: 'success' 
         });
-        setFormData({ email: '', password: '' });
+        setFormData({ email: '', password: '', confirmPassword: '' });
       }
     } catch (err) {
       setError('An unexpected error occurred');
@@ -402,7 +411,7 @@ const Login: React.FC = () => {
             />
           </div>
 
-          <div style={{ marginBottom: '2rem' }}>
+          <div style={{ marginBottom: '1.5rem' }}>
             <label htmlFor="password" style={{
               display: 'block',
               marginBottom: '0.75rem',
@@ -412,36 +421,139 @@ const Login: React.FC = () => {
             }}>
               Password
             </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '0.875rem',
-                background: '#2a2a2a',
-                border: '1px solid #404040',
-                borderRadius: '12px',
-                fontSize: '0.95rem',
-                color: '#ffffff',
-                boxSizing: 'border-box',
-                transition: 'all 0.2s ease',
-                outline: 'none'
-              }}
-              placeholder="Enter your password"
-              onFocus={(e) => {
-                e.target.style.borderColor = '#ff6b9d';
-                e.target.style.boxShadow = '0 0 0 3px rgba(255, 107, 157, 0.1)';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#404040';
-                e.target.style.boxShadow = 'none';
-              }}
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                disabled={loading}
+                style={{
+                  width: '100%',
+                  padding: '0.875rem',
+                  paddingRight: '4rem',
+                  background: '#2a2a2a',
+                  border: '1px solid #404040',
+                  borderRadius: '12px',
+                  fontSize: '0.95rem',
+                  color: '#ffffff',
+                  boxSizing: 'border-box',
+                  transition: 'all 0.2s ease',
+                  outline: 'none'
+                }}
+                placeholder="Enter your password"
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#ff6b9d';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(255, 107, 157, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#404040';
+                  e.target.style.boxShadow = 'none';
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '0.75rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: '#ffffff',
+                  fontSize: '0.8rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: '6px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseOver={(e) => {
+                  e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.background = 'none';
+                }}
+              >
+                {showPassword ? 'HIDE' : 'VIEW'}
+              </button>
+            </div>
           </div>
+
+          {isSignUp && (
+            <div style={{ marginBottom: '2rem' }}>
+              <label htmlFor="confirmPassword" style={{
+                display: 'block',
+                marginBottom: '0.75rem',
+                color: '#ffffff',
+                fontSize: '0.9rem',
+                fontWeight: '600'
+              }}>
+                Confirm Password
+              </label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  disabled={loading}
+                  style={{
+                    width: '100%',
+                    padding: '0.875rem',
+                    paddingRight: '4rem',
+                    background: '#2a2a2a',
+                    border: '1px solid #404040',
+                    borderRadius: '12px',
+                    fontSize: '0.95rem',
+                    color: '#ffffff',
+                    boxSizing: 'border-box',
+                    transition: 'all 0.2s ease',
+                    outline: 'none'
+                  }}
+                  placeholder="Confirm your password"
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#ff6b9d';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(255, 107, 157, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#404040';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '0.75rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    color: '#ffffff',
+                    fontSize: '0.8rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '6px',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseOver={(e) => {
+                    e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.target.style.background = 'none';
+                  }}
+                >
+                  {showConfirmPassword ? 'HIDE' : 'VIEW'}
+                </button>
+              </div>
+            </div>
+          )}
 
           <button
             type="submit"
@@ -484,18 +596,6 @@ const Login: React.FC = () => {
           </button>
         </form>
 
-        <div style={{
-          marginTop: '2rem',
-          padding: '1rem',
-          background: 'rgba(255, 107, 157, 0.1)',
-          border: '1px solid rgba(255, 107, 157, 0.2)',
-          borderRadius: '12px',
-          fontSize: '0.8rem',
-          color: '#ff6b9d',
-          fontWeight: '500'
-        }}>
-          <strong>💡 Note:</strong> After successful login, check the browser console for user data and JWT token.
-        </div>
         </div>
       </div>
 

@@ -26,3 +26,8 @@
 **st-25:** keep AI conversations specific to the analysed post and do not cross contaminate. re-analysis is not being triggered. <br>
 **st-26:** add time elapsed and time report to conversation "thinking" message. <br>
 **st-27:** extension sign in page. <br>
+<br>
+need db:
+- pro or free plan
+- preventing duplicate email sign ups
+- saving conversations to specific URLs for users
