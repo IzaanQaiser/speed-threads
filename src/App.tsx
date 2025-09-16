@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
 import Login from './Login';
 import AuthCallback from './AuthCallback';
+import LandingPage from './LandingPage';
+import PrivacyPolicy from './PrivacyPolicy';
+import TermsOfService from './TermsOfService';
 
 interface User {
   id: string;
@@ -12,7 +15,7 @@ interface User {
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-
+  const [currentView, setCurrentView] = useState<'landing' | 'login' | 'dashboard' | 'privacy' | 'terms'>('landing');
 
   // Check if we're on the auth callback route
   const isAuthCallback = window.location.pathname === '/auth/callback';
@@ -37,7 +40,7 @@ const App: React.FC = () => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_, session) => {
         if (session?.user) {
           setUser(session.user);
           console.log('Auth state changed - User:', session.user);
@@ -96,11 +99,29 @@ const App: React.FC = () => {
     );
   }
 
+  // Show landing page by default
+  if (currentView === 'landing') {
+    return <LandingPage 
+      onGetStarted={() => setCurrentView('login')} 
+      onPrivacyPolicy={() => setCurrentView('privacy')}
+      onTermsOfService={() => setCurrentView('terms')}
+    />;
+  }
+
+  // Show privacy policy page
+  if (currentView === 'privacy') {
+    return <PrivacyPolicy onBack={() => setCurrentView('landing')} />;
+  }
+
+  // Show terms of service page
+  if (currentView === 'terms') {
+    return <TermsOfService onBack={() => setCurrentView('landing')} />;
+  }
+
   if (user) {
     // Determine login provider
-    const provider = user.app_metadata?.provider || 'email';
+    const provider = (user as any).app_metadata?.provider || 'email';
     const providerName = provider === 'google' ? 'Google' : 'Email';
-    const providerIcon = provider === 'google' ? '🔗' : '📧';
 
     return (
       <div style={{
@@ -254,12 +275,12 @@ const App: React.FC = () => {
               boxShadow: '0 4px 15px rgba(220, 53, 69, 0.3)'
             }}
             onMouseOver={(e) => {
-              e.target.style.transform = 'translateY(-2px)';
-              e.target.style.boxShadow = '0 6px 20px rgba(220, 53, 69, 0.4)';
+              (e.target as HTMLButtonElement).style.transform = 'translateY(-2px)';
+              (e.target as HTMLButtonElement).style.boxShadow = '0 6px 20px rgba(220, 53, 69, 0.4)';
             }}
             onMouseOut={(e) => {
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.boxShadow = '0 4px 15px rgba(220, 53, 69, 0.3)';
+              (e.target as HTMLButtonElement).style.transform = 'translateY(0)';
+              (e.target as HTMLButtonElement).style.boxShadow = '0 4px 15px rgba(220, 53, 69, 0.3)';
             }}
           >
             Logout
@@ -277,19 +298,17 @@ const App: React.FC = () => {
           body {
             margin: 0;
             padding: 0;
-            overflow: hidden;
           }
           html {
             margin: 0;
             padding: 0;
-            overflow: hidden;
           }
         `}</style>
       </div>
     );
   }
 
-  return <Login />;
+  return <Login onBackToLanding={() => setCurrentView('landing')} />;
 };
 
 export default App;

@@ -7,7 +7,11 @@ interface LoginFormData {
   confirmPassword: string;
 }
 
-const Login: React.FC = () => {
+interface LoginProps {
+  onBackToLanding: () => void;
+}
+
+const Login: React.FC<LoginProps> = ({ onBackToLanding }) => {
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: '',
@@ -70,10 +74,9 @@ const Login: React.FC = () => {
           height: 100%;
           width: 100%;
           background: #0f0f0f;
-          overflow: hidden;
         }
         #root {
-          height: 100vh;
+          min-height: 100vh;
           width: 100vw;
           background: #0f0f0f;
         }
@@ -321,19 +324,49 @@ const Login: React.FC = () => {
           outline: 'none'
         }}>
         <div style={{
-          background: 'linear-gradient(135deg, #6b8cff 0%, #9a7bfa 25%, #e893fb 50%, #e5576c 75%, #3facfe 100%)',
-          backgroundSize: '300% 300%',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
-          fontSize: '2.2rem',
-          fontWeight: '700',
-          textAlign: 'center',
-          marginBottom: '0.5rem',
-          letterSpacing: '-0.02em',
-          animation: 'gradient-shift 6s ease-in-out infinite'
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: '0.5rem'
         }}>
-          speedthreads
+          <button
+            onClick={onBackToLanding}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#b0b0b0',
+              fontSize: '1.2rem',
+              cursor: 'pointer',
+              marginRight: '1rem',
+              padding: '0.5rem',
+              borderRadius: '8px',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = 'none';
+              e.currentTarget.style.color = '#b0b0b0';
+            }}
+          >
+            ←
+          </button>
+          <div style={{
+            background: 'linear-gradient(135deg, #6b8cff 0%, #9a7bfa 25%, #e893fb 50%, #e5576c 75%, #3facfe 100%)',
+            backgroundSize: '300% 300%',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            fontSize: '2.2rem',
+            fontWeight: '700',
+            textAlign: 'center',
+            letterSpacing: '-0.02em',
+            animation: 'gradient-shift 6s ease-in-out infinite'
+          }}>
+            speedthreads
+          </div>
         </div>
         
         <h1 style={{
