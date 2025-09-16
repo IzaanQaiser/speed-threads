@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional, Literal
+from datetime import datetime
 
 class PostData(BaseModel):
     title: Optional[str] = ""
@@ -46,3 +47,27 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     message: str
     analysis: Optional[SummaryResponse] = None
+
+# MongoDB Models
+class UserDocument(BaseModel):
+    supabase_uid: str
+    display_name: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+class ConversationDocument(BaseModel):
+    uid: str  # Supabase UID
+    post_url: str
+    ai_messages: List[str]
+    user_messages: List[str]
+    created_at: datetime
+    updated_at: datetime
+
+class ConversationRequest(BaseModel):
+    post_url: str
+    ai_messages: List[str]
+    user_messages: List[str]
+
+class ConversationResponse(BaseModel):
+    conversation_id: str
+    message: str
