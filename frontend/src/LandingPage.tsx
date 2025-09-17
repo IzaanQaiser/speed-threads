@@ -689,9 +689,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
         * {
           box-sizing: border-box;
         }
-        body {
+        html, body {
           margin: 0;
           padding: 0;
+          height: 100%;
+          overflow-x: hidden;
+          overscroll-behavior: none;
+          background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #16213e 100%);
+        }
+        #root {
+          min-height: 100vh;
+          background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #16213e 100%);
         }
       `}</style>
     </div>
