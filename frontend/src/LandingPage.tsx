@@ -44,19 +44,26 @@ const LandingPage: React.FC = () => {
           <button 
             onClick={() => window.open('https://tally.so/r/wvR8gg', '_blank')}
             style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
+              background: 'linear-gradient(135deg, #7c9eff 0%, #a78bfa 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)',
+              backgroundSize: '300% 300%',
+              animation: 'gradient-shift 6s ease-in-out infinite',
               color: 'white',
+              border: 'none',
               padding: '0.5rem 1rem',
               borderRadius: '8px',
+              fontSize: '0.9rem',
+              fontWeight: '600',
               cursor: 'pointer',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.3s ease',
+              boxShadow: '0 4px 16px rgba(124, 158, 255, 0.3)'
             }}
             onMouseOver={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(124, 158, 255, 0.4)';
             }}
             onMouseOut={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 16px rgba(124, 158, 255, 0.3)';
             }}
           >
             Get Started
