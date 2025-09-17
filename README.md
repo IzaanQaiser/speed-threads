@@ -1,5 +1,3 @@
-# SpeedThreads
-
 <div align="center">
   <img src="chrome-extension/assets/speedthreads-logo.svg" alt="SpeedThreads logo" width="200" height="200" style="border-radius: 20px;">
   <h1 style="margin: 20px 0 10px 0; font-size: 2.5em; font-weight: 700; background: linear-gradient(135deg, #7c9eff 0%, #a78bfa 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;">SpeedThreads</h1>
