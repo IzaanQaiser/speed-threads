@@ -1,15 +1,18 @@
 {
   "name": "speed-threads",
   "version": "1.0.0",
-  "description": "Instantly summarize Reddit and X (Twitter) threads using local AI",
-  "main": "index.js",
+  "description": "AI-powered social media thread summarization",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "chrome-extension"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "test": "echo 'Test script placeholder'",
-    "deploy": "npm run build && gh-pages -d dist",
-    "predeploy": "npm run build"
+    "dev": "npm run dev --workspace=frontend",
+    "build": "npm run build --workspace=frontend",
+    "install:all": "npm install && npm install --workspace=frontend",
+    "start:backend": "cd backend && python -m uvicorn src.main:app --reload",
+    "setup": "npm run install:all && cd backend && pip install -r requirements.txt"
   },
   "keywords": [
     "chrome-extension",
@@ -19,19 +22,10 @@
     "summarization",
     "gpt-oss"
   ],
-  "author": "Izaan",
+  "author": "Izaan Qaiser",
   "license": "MIT",
-  "devDependencies": {
-    "@types/chrome": "^0.0.254"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.57.4",
-    "@types/react": "^19.1.13",
-    "@types/react-dom": "^19.1.9",
-    "@vitejs/plugin-react": "^5.0.2",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "typescript": "^5.9.2",
-    "vite": "^7.1.5"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/IzaanQaiser/speed-threads.git"
   }
 }

@@ -240,22 +240,19 @@ async function getCachedData(url) {
 git clone https://github.com/IzaanQaiser/speed-threads.git
 cd speed-threads
 
-# Install frontend dependencies
-npm install
+# Run the setup script (recommended)
+./setup.sh
 
-# Install backend dependencies
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
+# OR manually install dependencies
+npm run setup
 
 # Set up environment variables
-cp .env.example .env
+cp env.example .env
 # Add your OpenAI API key and Supabase credentials
 
 # Start development servers
 npm run dev          # Frontend (port 3000)
-uvicorn src.main:app --reload  # Backend (port 8000)
+npm run start:backend  # Backend (port 8000)
 
 # Load Chrome Extension
 # 1. Open chrome://extensions/

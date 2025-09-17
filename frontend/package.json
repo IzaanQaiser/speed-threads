@@ -1,0 +1,33 @@
+{
+  "name": "speed-threads-frontend",
+  "version": "1.0.0",
+  "description": "Frontend React app for SpeedThreads",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "echo 'Test script placeholder'",
+    "deploy": "npm run build && gh-pages -d dist",
+    "predeploy": "npm run build"
+  },
+  "keywords": [
+    "react",
+    "typescript",
+    "vite",
+    "frontend"
+  ],
+  "devDependencies": {
+    "@types/chrome": "^0.0.254"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.5"
+  }
+}
