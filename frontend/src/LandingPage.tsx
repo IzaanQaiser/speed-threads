@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 
-const LandingPage: React.FC = () => {
+interface LandingPageProps {
+  onNavigate: (page: 'privacy' | 'terms') => void;
+}
+
+const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -584,7 +588,7 @@ const LandingPage: React.FC = () => {
             marginBottom: '2rem'
           }}>
             <button 
-              onClick={() => alert('Privacy Policy coming soon!')}
+              onClick={() => onNavigate('privacy')}
               style={{ 
                 background: 'none',
                 border: 'none',
@@ -605,7 +609,7 @@ const LandingPage: React.FC = () => {
               Privacy Policy
             </button>
             <button 
-              onClick={() => alert('Terms of Service coming soon!')}
+              onClick={() => onNavigate('terms')}
               style={{ 
                 background: 'none',
                 border: 'none',

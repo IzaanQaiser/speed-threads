@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface PrivacyPolicyProps {
   onBack: () => void;
 }
 
 const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   return (
     <div style={{
       minHeight: '100vh',
@@ -103,7 +106,7 @@ const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
             marginBottom: '2rem',
             lineHeight: '1.6'
           }}>
-            <strong>Last updated:</strong> December 2024
+            <strong>Last updated:</strong> September 2025
           </p>
 
           <h2 style={{
