@@ -29,5 +29,8 @@
     "react-dom": "^19.1.1",
     "typescript": "^5.9.2",
     "vite": "^7.1.5"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.50.2"
   }
 }
