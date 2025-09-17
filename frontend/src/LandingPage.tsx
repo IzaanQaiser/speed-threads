@@ -664,7 +664,7 @@ const LandingPage: React.FC = () => {
             color: '#666',
             fontSize: '0.9rem'
           }}>
-            © 2024 SpeedThreads. Open source and free forever.
+            © 2025 SpeedThreads.
           </p>
         </div>
       </footer>
